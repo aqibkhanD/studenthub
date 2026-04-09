@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIU Student Services — Admin Dashboard</title>
+<style>
+/* ─── RESET & BASE ─────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #f1f5f9;
+  --surface:   #ffffff;
+  --sidebar:   #0f2744;
+  --sidebar-h: #1a3a6b;
+  --primary:   #1d4ed8;
+  --primary-h: #1e40af;
+  --text:      #1e293b;
+  --muted:     #64748b;
+  --border:    #e2e8f0;
+  --red:       #dc2626;
+  --green:     #16a34a;
+  --amber:     #d97706;
+  --purple:    #7c3aed;
+  --sky:       #0284c7;
+  --radius:    8px;
+  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.10);
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; font-size: 14px; }
+
+/* ─── SIDEBAR ──────────────────────────────────────── */
+.sidebar { width: 240px; background: var(--sidebar); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
+.sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid #ffffff14; }
+.sidebar-logo .logo-text { font-size: 15px; font-weight: 800; color: #fff; line-height: 1.2; }
+.sidebar-logo .logo-sub  { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.sidebar-logo .logo-badge { display: inline-block; background: #2563eb; color: #fff; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 10px; margin-top: 4px; }
+
+.nav-section { padding: 16px 12px 4px; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #475569; text-transform: uppercase; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin: 1px 8px; border-radius: var(--radius); color: #94a3b8; font-size: 13px; cursor: pointer; transition: all .15s; text-decoration: none; }
+.nav-item:hover  { background: #ffffff12; color: #fff; }
+.nav-item.active { background: #1d4ed8; color: #fff; }
+.nav-item .icon  { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.nav-item .badge { margin-left: auto; background: #dc2626; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+.nav-item .badge.amber { background: #d97706; }
+
+.sidebar-footer { margin-top: auto; padding: 16px; border-top: 1px solid #ffffff14; }
+.admin-card { display: flex; align-items: center; gap: 10px; }
+.admin-avatar { width: 34px; height: 34px; border-radius: 50%; background: #1d4ed8; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.admin-name { font-size: 12px; font-weight: 600; color: #e2e8f0; }
+.admin-role { font-size: 10px; color: #64748b; }
+
+/* ─── MAIN AREA ─────────────────────────────────────── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Topbar */
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+.topbar-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.topbar-sub   { font-size: 12px; color: var(--muted); margin-left: 4px; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.notif-btn { position: relative; background: none; border: none; cursor: pointer; font-size: 18px; color: var(--muted); padding: 4px; }
+.notif-dot { position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; background: var(--red); border-radius: 50%; border: 2px solid var(--surface); }
+.dept-tag { background: #eff6ff; color: var(--primary); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; border: 1px solid #bfdbfe; }
+
+/* Content area */
+.content { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+/* ─── STATS ROW ─────────────────────────────────────── */
+.stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+.stat-card { background: var(--surface); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.stat-card .s-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.stat-card .s-value { font-size: 28px; font-weight: 800; margin: 4px 0 2px; }
+.stat-card .s-sub   { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.stat-card .s-sub .up   { color: var(--green); font-weight: 600; }
+.stat-card .s-sub .down { color: var(--red);   font-weight: 600; }
+.stat-card.red    .s-value { color: var(--red); }
+.stat-card.amber  .s-value { color: var(--amber); }
+.stat-card.green  .s-value { color: var(--green); }
+.stat-card.primary .s-value { color: var(--primary); }
+.stat-card.purple .s-value { color: var(--purple); }
+
+/* ─── PANEL ROW ─────────────────────────────────────── */
+.panel-row { display: flex; gap: 20px; flex: 1; min-height: 0; }
+.queue-panel { flex: 1; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); display: flex; flex-direction: column; min-width: 0; }
+.detail-panel { width: 380px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; transition: width .2s; }
+.detail-panel.collapsed { width: 0; border: none; }
+
+/* Queue panel header */
+.panel-head { padding: 16px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
+.panel-head h2 { font-size: 14px; font-weight: 700; }
+.panel-count { background: #f1f5f9; border: 1px solid var(--border); border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--muted); padding: 1px 8px; }
+
+/* Filters */
+.filter-bar { padding: 10px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex-shrink: 0; }
+.filter-select { border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; font-size: 12px; color: var(--text); background: var(--surface); cursor: pointer; outline: none; }
+.filter-select:focus { border-color: var(--primary); }
+.search-box { flex: 1; min-width: 160px; display: flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; }
+.search-box input { border: none; background: none; font-size: 12px; outline: none; flex: 1; color: var(--text); }
+.search-box span  { color: var(--muted); font-size: 13px; }
+.btn-sm { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all .15s; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-h); }
+.btn-outline { background: none; color: var(--muted); border: 1px solid var(--border); }
+.btn-outline:hover { background: var(--bg); color: var(--text); }
+
+/* Table */
+.table-wrap { flex: 1; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th { position: sticky; top: 0; background: #f8fafc; padding: 9px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
+tbody tr:hover { background: #f8fafc; }
+tbody tr.selected { background: #eff6ff; }
+tbody td { padding: 11px 14px; font-size: 13px; vertical-align: middle; }
+.ref-no { font-family: monospace; font-size: 11px; color: var(--muted); }
+.student-name { font-weight: 600; color: var(--text); }
+.form-type-tag { font-size: 11px; background: #f1f5f9; color: var(--muted); padding: 2px 8px; border-radius: 4px; }
+
+/* Status badges */
+.status-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+.s-submitted    { background: #eff6ff; color: #1d4ed8; }
+.s-routed       { background: #f0fdf4; color: #15803d; }
+.s-in_review    { background: #fefce8; color: #a16207; }
+.s-action_required { background: #fdf4ff; color: #7e22ce; }
+.s-escalated    { background: #fff1f2; color: #be123c; }
+.s-approved     { background: #f0fdf4; color: #15803d; }
+.s-rejected     { background: #fff1f2; color: #be123c; }
+.s-completed    { background: #f0fdf4; color: #15803d; }
+.s-returned     { background: #fff7ed; color: #c2410c; }
+.s-draft        { background: #f8fafc; color: var(--muted); }
+
+/* SLA indicator */
+.sla-pill { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+.sla-ok      { background: #f0fdf4; color: #15803d; }
+.sla-warn    { background: #fefce8; color: #a16207; }
+.sla-breach  { background: #fff1f2; color: #be123c; }
+
+/* Priority dot */
+.priority { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.p-high   { background: var(--red); }
+.p-med    { background: var(--amber); }
+.p-low    { background: var(--green); }
+
+/* ─── DETAIL PANEL ──────────────────────────────────── */
+.detail-head { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; flex-shrink: 0; }
+.detail-head h3 { font-size: 13px; font-weight: 700; flex: 1; }
+.close-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 0; line-height: 1; }
+.detail-body { flex: 1; overflow-y: auto; }
+
+.detail-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.detail-section h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 10px; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.info-item { }
+.info-item .i-label { font-size: 10px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+.info-item .i-value { font-size: 12px; font-weight: 600; color: var(--text); }
+.info-full { grid-column: span 2; }
+
+/* Timeline */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.tl-item { display: flex; gap: 10px; }
+.tl-line { display: flex; flex-direction: column; align-items: center; }
+.tl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; margin-top: 4px; }
+.tl-dot.grey { background: var(--border); }
+.tl-connector { width: 2px; background: var(--border); flex: 1; min-height: 12px; }
+.tl-content { padding-bottom: 14px; flex: 1; }
+.tl-title { font-size: 12px; font-weight: 600; }
+.tl-meta  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.tl-comment { font-size: 11px; color: var(--text); background: var(--bg); padding: 6px 8px; border-radius: 6px; margin-top: 6px; border-left: 3px solid var(--border); }
+
+/* Action footer */
+.detail-footer { padding: 14px 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+.action-row { display: flex; gap: 8px; }
+.btn-action { flex: 1; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; transition: all .15s; }
+.btn-approve { background: #dcfce7; color: var(--green); }
+.btn-approve:hover { background: var(--green); color: #fff; }
+.btn-reject  { background: #fee2e2; color: var(--red); }
+.btn-reject:hover  { background: var(--red); color: #fff; }
+.btn-return  { background: #fdf4ff; color: var(--purple); }
+.btn-return:hover  { background: var(--purple); color: #fff; }
+.btn-assign  { background: #eff6ff; color: var(--primary); }
+.btn-assign:hover  { background: var(--primary); color: #fff; }
+.btn-escalate { background: #fff7ed; color: var(--amber); }
+.btn-escalate:hover { background: var(--amber); color: #fff; }
+
+/* Comment box */
+.comment-input { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 12px; resize: none; font-family: inherit; color: var(--text); outline: none; }
+.comment-input:focus { border-color: var(--primary); }
+
+/* ─── MODAL ─────────────────────────────────────────── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; z-index: 100; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: 12px; width: 420px; max-width: 95vw; box-shadow: var(--shadow-md); overflow: hidden; }
+.modal-head { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.modal-head h3 { font-size: 15px; font-weight: 700; flex: 1; }
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+  font-size: 13px; font-family: inherit; color: var(--text); outline: none;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+.modal-foot { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+.btn-md { padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+.btn-cancel { background: var(--bg); color: var(--muted); }
+.btn-confirm { background: var(--primary); color: #fff; }
+.btn-confirm:hover { background: var(--primary-h); }
+.btn-danger  { background: var(--red); color: #fff; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md); display: none; align-items: center; gap: 10px; z-index: 200; max-width: 320px; }
+.toast.show { display: flex; animation: slideup .25s ease; }
+.toast .toast-icon { font-size: 16px; }
+@keyframes slideup { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .stats-row { grid-template-columns: repeat(3, 1fr); }
+  .detail-panel { width: 320px; }
+}
+@media (max-width: 900px) {
+  .sidebar { width: 56px; }
+  .sidebar .nav-item span:not(.icon):not(.badge) { display: none; }
+  .sidebar .nav-section, .sidebar .admin-name, .sidebar .admin-role, .sidebar-logo .logo-sub { display: none; }
+  .sidebar-logo .logo-text { font-size: 12px; }
+}
+
+/* Util */
+.text-muted { color: var(--muted); }
+.text-sm    { font-size: 11px; }
+.fw-bold    { font-weight: 700; }
+.flex       { display: flex; }
+.items-center { align-items: center; }
+.gap-6      { gap: 6px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SIDEBAR                                           -->
+<!-- ══════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">DIU Student<br>Services</div>
+    <div class="logo-sub">Admin Portal</div>
+    <span class="logo-badge">Phase 1</span>
+  </div>
+
+  <div class="nav-section">Main</div>
+  <a class="nav-item" href="management-dashboard.html">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </span><span>Overview</span>
+  </a>
+  <a class="nav-item active" onclick="setView('dashboard')">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    </span><span>Admin Dashboard</span>
+  </a>
+  <a class="nav-item" onclick="setView('queue')">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    </span><span>Submission Queue</span>
+    <span class="badge">12</span>
+  </a>
+  <a class="nav-item" onclick="setView('queue')">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </span><span>SLA Alerts</span>
+    <span class="badge amber">3</span>
+  </a>
+
+  <div class="nav-section">Categories</div>
+  <a class="nav-item" onclick="filterByCategory('academic_certification')">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    </span><span>Academic & Certs</span>
+  </a>
+  <a class="nav-item" onclick="filterByCategory('complaint')">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    </span><span>Complaints</span>
+  </a>
+  <a class="nav-item" onclick="filterByCategory('career_counseling')">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+    </span><span>Career Counseling</span>
+  </a>
+  <a class="nav-item" onclick="filterByCategory('club_cocurricular')">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+    </span><span>Club & Events</span>
+  </a>
+
+  <div class="nav-section">Manage</div>
+  <a class="nav-item" href="admin-settings.html#users">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    </span><span>Manage Users</span>
+  </a>
+  <a class="nav-item" href="admin-settings.html#departments">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </span><span>Departments</span>
+  </a>
+  <a class="nav-item" href="admin-settings.html#form-types">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    </span><span>Form Types</span>
+  </a>
+  <a class="nav-item" href="admin-settings.html">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+    </span><span>Settings</span>
+  </a>
+  <a class="nav-item" href="audit-log.html">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    </span><span>Audit Log</span>
+  </a>
+  <a class="nav-item" href="student-portal.html">
+    <span class="icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </span><span>Student Portal</span>
+  </a>
+
+  <div class="sidebar-footer">
+    <div class="admin-card">
+      <div class="admin-avatar">RA</div>
+      <div>
+        <div class="admin-name">Rafiq Ahmed</div>
+        <div class="admin-role">Registrar's Office</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- MAIN                                              -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <span class="topbar-title" id="topbarTitle">Dashboard</span>
+      <span class="topbar-sub" id="topbarSub">Tuesday, 31 March 2026</span>
+    </div>
+    <div class="topbar-right">
+      <span class="dept-tag">🏢 Registrar's Office</span>
+      <button class="notif-btn" onclick="openNotifModal()">🔔<span class="notif-dot"></span></button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="mainContent">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card primary">
+        <div class="s-label">Total Submissions</div>
+        <div class="s-value">247</div>
+        <div class="s-sub"><span class="up">↑ 18</span> this week</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="s-label">Pending Review</div>
+        <div class="s-value">34</div>
+        <div class="s-sub"><span class="down">↑ 5</span> since yesterday</div>
+      </div>
+      <div class="stat-card red">
+        <div class="s-label">SLA Breached</div>
+        <div class="s-value">3</div>
+        <div class="s-sub"><span style="color:var(--red)">⚠ Needs attention</span></div>
+      </div>
+      <div class="stat-card green">
+        <div class="s-label">Resolved Today</div>
+        <div class="s-value">11</div>
+        <div class="s-sub"><span class="up">↑ 3</span> vs avg</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="s-label">Avg Resolution</div>
+        <div class="s-value">1.8<span style="font-size:14px;font-weight:500"> days</span></div>
+        <div class="s-sub"><span class="up">↑ Better</span> than 2.1 target</div>
+      </div>
+    </div>
+
+    <!-- QUEUE + DETAIL -->
+    <div class="panel-row" style="min-height: 0; flex: 1;">
+
+      <!-- Queue Panel -->
+      <div class="queue-panel">
+        <div class="panel-head">
+          <h2>📥 Submission Queue</h2>
+          <span class="panel-count" id="queueCount">34 pending</span>
+          <div style="margin-left:auto; display:flex; gap:6px;">
+            <button class="btn-sm btn-outline" onclick="bulkAction()">⚡ Bulk Action</button>
+            <button class="btn-sm btn-primary" onclick="exportData()">↓ Export</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+            <option value="">All Statuses</option>
+            <option value="submitted">Submitted</option>
+            <option value="routed">Routed</option>
+            <option value="in_review">In Review</option>
+            <option value="action_required">Action Required</option>
+            <option value="escalated">Escalated</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="completed">Completed</option>
+          </select>
+          <select class="filter-select" id="filterCategory" onchange="applyFilters()">
+            <option value="">All Categories</option>
+            <option value="academic_certification">Academic & Certs</option>
+            <option value="complaint">Complaints</option>
+            <option value="career_counseling">Career Counseling</option>
+            <option value="club_cocurricular">Club & Events</option>
+            <option value="finance">Finance</option>
+            <option value="it_support">IT Support</option>
+          </select>
+          <select class="filter-select" id="filterSLA" onchange="applyFilters()">
+            <option value="">All SLA</option>
+            <option value="breach">Breached</option>
+            <option value="warn">Warning (&lt; 4h)</option>
+            <option value="ok">On Track</option>
+          </select>
+          <div class="search-box">
+            <span>🔍</span>
+            <input type="text" placeholder="Search name, ref, type…" id="searchInput" oninput="applyFilters()">
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:28px"><input type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>
+                <th>Reference</th>
+                <th>Student</th>
+                <th>Form Type</th>
+                <th>Status</th>
+                <th>SLA</th>
+                <th>Submitted</th>
+                <th>Assigned</th>
+              </tr>
+            </thead>
+            <tbody id="queueBody"></tbody>
+          </table>
+        </div>
+      </div><!-- /queue-panel -->
+
+      <!-- Detail Panel -->
+      <div class="detail-panel collapsed" id="detailPanel">
+        <div class="detail-head">
+          <h3 id="detailTitle">Submission Detail</h3>
+          <button class="close-btn" onclick="closeDetail()">✕</button>
+        </div>
+
+        <div class="detail-body" id="detailBody">
+          <!-- Injected by JS -->
+        </div>
+
+        <div class="detail-footer">
+          <textarea class="comment-input" rows="2" placeholder="Add a comment or note…" id="adminComment"></textarea>
+          <div class="action-row">
+            <button class="btn-action btn-approve"  onclick="openActionModal('approve')">✅ Approve</button>
+            <button class="btn-action btn-reject"   onclick="openActionModal('reject')">❌ Reject</button>
+            <button class="btn-action btn-return"   onclick="openActionModal('return')">↩️ Return</button>
+          </div>
+          <div class="action-row">
+            <button class="btn-action btn-assign"   onclick="openActionModal('assign')">👤 Assign</button>
+            <button class="btn-action btn-escalate" onclick="openActionModal('escalate')">🚨 Escalate</button>
+          </div>
+        </div>
+      </div><!-- /detail-panel -->
+
+    </div><!-- /panel-row -->
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- ACTION MODAL                                      -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="actionModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Confirm Action</h3>
+      <button class="close-btn" onclick="closeModal('actionModal')">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <button class="btn-md btn-cancel" onclick="closeModal('actionModal')">Cancel</button>
+      <button class="btn-md btn-confirm" id="modalConfirmBtn" onclick="confirmAction()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS MODAL -->
+<div class="modal-overlay" id="notifModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>🔔 Notifications</h3>
+      <button class="close-btn" onclick="closeModal('notifModal')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div id="notifList"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-md btn-cancel" onclick="closeModal('notifModal')">Close</button>
+      <button class="btn-md btn-confirm" onclick="markAllRead()">Mark All Read</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon" style="display:flex;align-items:center"></span>
+  <span id="toastMsg">Action completed.</span>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT                                        -->
+<!-- ══════════════════════════════════════════════════ -->
+<script>
+// ── SAMPLE DATA ──────────────────────────────────────
+const SUBMISSIONS = [
+  { id:1, ref:'DIU-2026-00421', student:'Md. Ariful Islam',     sid:'221-15-5812', dept:'CSE',  phone:'+8801712345678', form:'Bonafide Certificate',      category:'academic_certification', status:'submitted',      sla:'warn',   submitted:'2h ago',    assigned:null,        anon:false, priority:'high' },
+  { id:2, ref:'DIU-2026-00420', student:'Nadia Rahman',         sid:'221-15-5901', dept:'EEE',  phone:'+8801812345679', form:'Student Complaint',          category:'complaint',              status:'in_review',      sla:'ok',     submitted:'5h ago',    assigned:'Karim Sir', anon:true,  priority:'high' },
+  { id:3, ref:'DIU-2026-00419', student:'Tanvir Ahmed',         sid:'219-15-4321', dept:'BBA',  phone:'+8801912345680', form:'Migration Certificate',      category:'academic_certification', status:'escalated',      sla:'breach', submitted:'3 days ago', assigned:'Rafiq Sir', anon:false, priority:'high' },
+  { id:4, ref:'DIU-2026-00418', student:'Fatema Khatun',        sid:'220-15-5100', dept:'CSE',  phone:'+8801611111111', form:'Fee Waiver Request',          category:'finance',                status:'action_required',sla:'warn',   submitted:'1 day ago', assigned:'Finance',   anon:false, priority:'med'  },
+  { id:5, ref:'DIU-2026-00417', student:'Sabbir Hossain',       sid:'222-15-6001', dept:'EEE',  phone:'+8801722222222', form:'Career Counseling Request',  category:'career_counseling',      status:'routed',         sla:'ok',     submitted:'3h ago',    assigned:null,        anon:false, priority:'low'  },
+  { id:6, ref:'DIU-2026-00416', student:'Anonymous',            sid:null,          dept:'—',    phone:null,             form:'Misconduct Report',          category:'complaint',              status:'submitted',      sla:'warn',   submitted:'1h ago',    assigned:null,        anon:true,  priority:'high' },
+  { id:7, ref:'DIU-2026-00415', student:'Rasel Mia',            sid:'220-15-4800', dept:'BBA',  phone:'+8801533333333', form:'Club Membership Application',category:'club_cocurricular',     status:'approved',       sla:'ok',     submitted:'2 days ago',assigned:'Karim Sir', anon:false, priority:'low'  },
+  { id:8, ref:'DIU-2026-00414', student:'Sumaiya Begum',        sid:'221-15-5700', dept:'CSE',  phone:'+8801644444444', form:'IT Support Ticket',          category:'it_support',             status:'completed',      sla:'ok',     submitted:'4 days ago',assigned:'IT Dept',   anon:false, priority:'low'  },
+  { id:9, ref:'DIU-2026-00413', student:'Imran Khan',           sid:'219-15-4100', dept:'EEE',  phone:'+8801755555555', form:'Character Certificate',       category:'academic_certification', status:'in_review',      sla:'ok',     submitted:'6h ago',    assigned:'Rafiq Sir', anon:false, priority:'med'  },
+  { id:10,ref:'DIU-2026-00412', student:'Poly Akter',           sid:'222-15-6200', dept:'CSE',  phone:'+8801866666666', form:'New Club Formation Request', category:'club_cocurricular',     status:'routed',         sla:'ok',     submitted:'8h ago',    assigned:null,        anon:false, priority:'low'  },
+  { id:11,ref:'DIU-2026-00411', student:'Rifat Mahmud',         sid:'220-15-5050', dept:'BBA',  phone:'+8801977777777', form:'Scholarship Application',    category:'finance',                status:'escalated',      sla:'breach', submitted:'5 days ago',assigned:'Dean',      anon:false, priority:'high' },
+  { id:12,ref:'DIU-2026-00410', student:'Mim Chowdhury',        sid:'221-15-5600', dept:'CSE',  phone:'+8801688888888', form:'Eligibility Certificate',    category:'academic_certification', status:'submitted',      sla:'ok',     submitted:'30m ago',   assigned:null,        anon:false, priority:'med'  },
+];
+
+const TIMELINE = {
+  1: [
+    { dot:true,  title:'Submitted',    meta:'31 Mar 2026 · 09:14 AM · Md. Ariful Islam', comment:null },
+    { dot:true,  title:'Auto-routed to Registrar\'s Office', meta:'31 Mar 2026 · 09:14 AM · System', comment:null },
+    { dot:false, title:'Awaiting review', meta:'Pending assignment', comment:null },
+  ],
+  3: [
+    { dot:true,  title:'Submitted',    meta:'28 Mar 2026 · 02:10 PM · Tanvir Ahmed', comment:null },
+    { dot:true,  title:'Routed to Registrar', meta:'28 Mar 2026 · 02:10 PM · System', comment:null },
+    { dot:true,  title:'In Review',    meta:'29 Mar 2026 · 10:00 AM · Rafiq Sir', comment:null },
+    { dot:true,  title:'SLA Breached — Escalated to Dean', meta:'31 Mar 2026 · 09:00 AM · System', comment:'SLA exceeded by 24h. Escalation triggered automatically.' },
+  ],
+  2: [
+    { dot:true,  title:'Submitted (Anonymous)',  meta:'31 Mar 2026 · 04:35 AM · Anonymous', comment:null },
+    { dot:true,  title:'Routed to Student Affairs', meta:'31 Mar 2026 · 04:35 AM · System', comment:null },
+    { dot:true,  title:'In Review', meta:'31 Mar 2026 · 09:00 AM · Karim Sir', comment:'Reviewing evidence documents provided.' },
+    { dot:false, title:'Awaiting decision', meta:'Pending', comment:null },
+  ],
+};
+
+const NOTIFICATIONS = [
+  { type:'breach', text:'SLA breach: DIU-2026-00419 (Tanvir Ahmed) is 24h overdue.',       time:'1h ago',  read:false },
+  { type:'breach', text:'SLA breach: DIU-2026-00411 (Rifat Mahmud) is 5 days overdue.',    time:'3h ago',  read:false },
+  { type:'new',    text:'New submission: DIU-2026-00421 — Bonafide Certificate request.',  time:'2h ago',  read:false },
+  { type:'new',    text:'New complaint (anonymous): DIU-2026-00416.',                      time:'1h ago',  read:false },
+  { type:'warn',   text:'SLA warning: DIU-2026-00418 expires in 3h 20m.',                 time:'20m ago', read:false },
+  { type:'done',   text:'DIU-2026-00415 approved by Karim Sir.',                           time:'2d ago',  read:true  },
+];
+
+// ── STATE ─────────────────────────────────────────────
+let selectedId   = null;
+let currentAction = null;
+let filtered     = [...SUBMISSIONS];
+
+// ── RENDER TABLE ──────────────────────────────────────
+function renderTable(data) {
+  const body = document.getElementById('queueBody');
+  if (!data.length) {
+    body.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">No submissions match the current filters.</td></tr>`;
+    return;
+  }
+  body.innerHTML = data.map(s => `
+    <tr onclick="selectRow(${s.id})" class="${selectedId===s.id ? 'selected' : ''}" id="row-${s.id}">
+      <td><input type="checkbox" class="row-cb" onclick="event.stopPropagation()" data-id="${s.id}"></td>
+      <td><span class="ref-no">${s.ref}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div class="priority p-${s.priority}"></div>
+          <div>
+            <div class="student-name">${s.anon ? '<span style="display:inline-flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Anonymous</span>' : s.student}</div>
+            ${!s.anon && s.sid ? `<div class="text-muted text-sm">${s.sid} · ${s.dept}</div>` : ''}
+          </div>
+        </div>
+      </td>
+      <td><span class="form-type-tag">${s.form}</span></td>
+      <td><span class="status-badge s-${s.status}">${formatStatus(s.status)}</span></td>
+      <td><span class="sla-pill sla-${s.sla}">${slaLabel(s.sla)}</span></td>
+      <td class="text-muted text-sm">${s.submitted}</td>
+      <td class="text-muted text-sm">${s.assigned || '<span style="color:#cbd5e1">Unassigned</span>'}</td>
+    </tr>
+  `).join('');
+  document.getElementById('queueCount').textContent = `${data.length} submission${data.length!==1?'s':''}`;
+}
+
+function formatStatus(s) {
+  return { submitted:'Submitted', routed:'Routed', in_review:'In Review',
+           action_required:'Action Required', escalated:'Escalated', approved:'Approved',
+           rejected:'Rejected', completed:'Completed', returned:'Returned', draft:'Draft' }[s] || s;
+}
+function slaLabel(s) {
+  return { ok:'On Track', warn:'< 4h Left', breach:'SLA Breached' }[s] || s;
+}
+
+// ── FILTERS ──────────────────────────────────────────
+function applyFilters() {
+  const status   = document.getElementById('filterStatus').value;
+  const category = document.getElementById('filterCategory').value;
+  const sla      = document.getElementById('filterSLA').value;
+  const q        = document.getElementById('searchInput').value.toLowerCase();
+
+  filtered = SUBMISSIONS.filter(s =>
+    (!status   || s.status   === status) &&
+    (!category || s.category === category) &&
+    (!sla      || s.sla      === sla) &&
+    (!q        || s.student.toLowerCase().includes(q) ||
+                  s.ref.toLowerCase().includes(q)     ||
+                  s.form.toLowerCase().includes(q)    ||
+                  (s.sid && s.sid.includes(q)))
+  );
+  renderTable(filtered);
+}
+
+function filterByCategory(cat) {
+  document.getElementById('filterCategory').value = cat;
+  applyFilters();
+}
+
+// ── ROW SELECT / DETAIL ──────────────────────────────
+function selectRow(id) {
+  selectedId = id;
+  const sub  = SUBMISSIONS.find(s => s.id === id);
+  if (!sub) return;
+
+  document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+  const row = document.getElementById(`row-${id}`);
+  if (row) row.classList.add('selected');
+
+  const panel = document.getElementById('detailPanel');
+  panel.classList.remove('collapsed');
+  document.getElementById('detailTitle').textContent = sub.ref;
+
+  const tl = TIMELINE[id] || [
+    { dot:true,  title:'Submitted', meta:`${sub.submitted} · ${sub.student}`, comment:null },
+    { dot:false, title:'Awaiting review', meta:'Pending', comment:null },
+  ];
+
+  document.getElementById('detailBody').innerHTML = `
+    <!-- Student Info -->
+    <div class="detail-section">
+      <h4>Student Information</h4>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="i-label">Name</div>
+          <div class="i-value">${sub.anon ? '<span style="display:inline-flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Anonymous</span>' : sub.student}</div>
+        </div>
+        <div class="info-item">
+          <div class="i-label">Student ID</div>
+          <div class="i-value">${sub.anon ? '—' : (sub.sid || '—')}</div>
+        </div>
+        <div class="info-item">
+          <div class="i-label">Department</div>
+          <div class="i-value">${sub.dept}</div>
+        </div>
+        <div class="info-item">
+          <div class="i-label">Phone</div>
+          <div class="i-value">${sub.anon ? '—' : (sub.phone || '—')}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submission Info -->
+    <div class="detail-section">
+      <h4>Submission Details</h4>
+      <div class="info-grid">
+        <div class="info-item info-full">
+          <div class="i-label">Form Type</div>
+          <div class="i-value">${sub.form}</div>
+        </div>
+        <div class="info-item">
+          <div class="i-label">Status</div>
+          <div class="i-value"><span class="status-badge s-${sub.status}">${formatStatus(sub.status)}</span></div>
+        </div>
+        <div class="info-item">
+          <div class="i-label">SLA</div>
+          <div class="i-value"><span class="sla-pill sla-${sub.sla}">${slaLabel(sub.sla)}</span></div>
+        </div>
+        <div class="info-item">
+          <div class="i-label">Submitted</div>
+          <div class="i-value">${sub.submitted}</div>
+        </div>
+        <div class="info-item">
+          <div class="i-label">Assigned To</div>
+          <div class="i-value">${sub.assigned || 'Unassigned'}</div>
+        </div>
+        ${sub.category === 'academic_certification' ? `
+        <div class="info-item info-full">
+          <div class="i-label">Purpose (from student)</div>
+          <div class="i-value" style="font-weight:400;color:var(--muted)">For bank account opening / visa application</div>
+        </div>` : ''}
+        ${sub.anon ? `
+        <div class="info-item info-full" style="background:#fff7ed;padding:8px;border-radius:6px;border:1px solid #fed7aa;">
+          <div class="i-label" style="color:var(--amber);display:flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg> Anonymous Submission</div>
+          <div class="i-value" style="font-weight:400;font-size:11px;color:var(--muted)">Student identity is hidden from this panel. Only accessible by Super Admin.</div>
+        </div>` : ''}
+      </div>
+    </div>
+
+    <!-- Documents -->
+    ${sub.category === 'complaint' || sub.category === 'finance' ? `
+    <div class="detail-section">
+      <h4>Attached Documents</h4>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:7px;background:var(--bg);border-radius:6px;border:1px solid var(--border);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;">evidence_photo.jpg</div>
+            <div style="font-size:10px;color:var(--muted);">JPG · 234 KB</div>
+          </div>
+          <button class="btn-sm btn-outline">View</button>
+        </div>
+      </div>
+    </div>` : ''}
+
+    <!-- Timeline -->
+    <div class="detail-section">
+      <h4>Activity Timeline</h4>
+      <div class="timeline">
+        ${tl.map((t,i) => `
+          <div class="tl-item">
+            <div class="tl-line">
+              <div class="tl-dot ${t.dot ? '' : 'grey'}"></div>
+              ${i < tl.length-1 ? '<div class="tl-connector"></div>' : ''}
+            </div>
+            <div class="tl-content">
+              <div class="tl-title">${t.title}</div>
+              <div class="tl-meta">${t.meta}</div>
+              ${t.comment ? `<div class="tl-comment">${t.comment}</div>` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('adminComment').value = '';
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.add('collapsed');
+  selectedId = null;
+  document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+}
+
+// ── ACTION MODAL ─────────────────────────────────────
+const ACTIONS = {
+  approve: {
+    title: 'Approve Submission',
+    confirmClass: 'btn-confirm',
+    confirmText:  'Approve',
+    body: (ref) => `
+      <p style="color:var(--muted);font-size:13px;">You are about to approve <strong>${ref}</strong>. The student will be notified via SMS and in-app notification.</p>
+      <div class="form-group">
+        <label>Approval Comment (optional)</label>
+        <textarea rows="3" placeholder="e.g. Certificate will be ready for collection in 24 hours…" id="m_comment"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Send SMS to Student?</label>
+        <select id="m_sms">
+          <option value="1">Yes — send notification SMS</option>
+          <option value="0">No</option>
+        </select>
+      </div>`,
+  },
+  reject: {
+    title: 'Reject Submission',
+    confirmClass: 'btn-danger',
+    confirmText:  'Reject',
+    body: (ref) => `
+      <p style="color:var(--muted);font-size:13px;">You are about to reject <strong>${ref}</strong>. A reason is required.</p>
+      <div class="form-group">
+        <label>Rejection Reason <span style="color:var(--red)">*</span></label>
+        <textarea rows="3" placeholder="e.g. Insufficient documentation provided. Please resubmit with your student ID." id="m_comment" required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Send SMS to Student?</label>
+        <select id="m_sms">
+          <option value="1">Yes — send rejection SMS</option>
+          <option value="0">No</option>
+        </select>
+      </div>`,
+  },
+  return: {
+    title: 'Return for Correction',
+    confirmClass: 'btn-confirm',
+    confirmText:  'Return',
+    body: (ref) => `
+      <p style="color:var(--muted);font-size:13px;">Return <strong>${ref}</strong> to the student to correct or provide additional information.</p>
+      <div class="form-group">
+        <label>Instructions for Student <span style="color:var(--red)">*</span></label>
+        <textarea rows="3" placeholder="e.g. Please attach a scanned copy of your admission letter and resubmit." id="m_comment" required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Resubmission Deadline</label>
+        <input type="date" id="m_deadline" value="2026-04-07">
+      </div>`,
+  },
+  assign: {
+    title: 'Assign to Admin',
+    confirmClass: 'btn-confirm',
+    confirmText:  'Assign',
+    body: (ref) => `
+      <p style="color:var(--muted);font-size:13px;">Assign <strong>${ref}</strong> to a staff member in your department.</p>
+      <div class="form-group">
+        <label>Assign To</label>
+        <select id="m_assignee">
+          <option>Rafiq Ahmed (Registrar)</option>
+          <option>Karim Uddin (Deputy Registrar)</option>
+          <option>Sadia Islam (Clerk)</option>
+          <option>Reza Khan (Assistant Registrar)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select id="m_priority">
+          <option>Normal</option>
+          <option>High</option>
+          <option>Urgent</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Note (optional)</label>
+        <input type="text" placeholder="e.g. Please process today" id="m_comment">
+      </div>`,
+  },
+  escalate: {
+    title: 'Escalate Submission',
+    confirmClass: 'btn-danger',
+    confirmText:  'Escalate',
+    body: (ref) => `
+      <p style="color:var(--muted);font-size:13px;">Escalate <strong>${ref}</strong> to a higher authority.</p>
+      <div class="form-group">
+        <label>Escalate To</label>
+        <select id="m_escalateTo">
+          <option>Dean of Student Affairs</option>
+          <option>Vice Chancellor Office</option>
+          <option>IT Director</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Reason for Escalation <span style="color:var(--red)">*</span></label>
+        <textarea rows="3" placeholder="e.g. Student has not received a response in 5 days despite follow-up." id="m_comment" required></textarea>
+      </div>`,
+  },
+};
+
+function openActionModal(action) {
+  if (!selectedId) { showToast('⚠️', 'Please select a submission first.'); return; }
+  const sub = SUBMISSIONS.find(s => s.id === selectedId);
+  currentAction = action;
+  const cfg = ACTIONS[action];
+  document.getElementById('modalTitle').textContent = cfg.title;
+  document.getElementById('modalBody').innerHTML    = cfg.body(sub.ref);
+  const btn = document.getElementById('modalConfirmBtn');
+  btn.className = `btn-md ${cfg.confirmClass}`;
+  btn.textContent = cfg.confirmText;
+  document.getElementById('actionModal').classList.add('open');
+}
+
+function confirmAction() {
+  const sub = SUBMISSIONS.find(s => s.id === selectedId);
+  const comment  = document.getElementById('m_comment')?.value || '';
+  const assignee = document.getElementById('m_assignee')?.value || null;
+  const deadline = document.getElementById('m_deadline')?.value || null;
+
+  const msgs = {
+    approve:  `${sub.ref} approved. Student notified via SMS.`,
+    reject:   `${sub.ref} rejected. Reason sent to student.`,
+    return:   `${sub.ref} returned to student for correction.`,
+    assign:   `${sub.ref} assigned to ${assignee || 'staff'}.`,
+    escalate: `${sub.ref} escalated to senior authority.`,
+  };
+
+  const newStatus = { approve:'approved', reject:'rejected', return:'returned', assign:'in_review', escalate:'escalated' }[currentAction];
+  sub.status = newStatus;
+  if (assignee)  sub.assigned = assignee.split(' (')[0];
+  if (comment)   sub.lastComment = comment;
+  if (deadline)  sub.deadline = deadline;
+
+  // Append to timeline
+  const now = new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  const adminName = 'Rafiq Ahmed (You)';
+  const tl = TIMELINE[sub.id] || [];
+  tl.push({ dot:true, title: `Status changed to: ${formatStatus(newStatus)}`, meta:`${now} · ${adminName}`, comment: comment || null });
+  TIMELINE[sub.id] = tl;
+
+  closeModal('actionModal');
+  applyFilters();
+  // Re-open detail panel with updated info
+  selectRow(sub.id);
+  showToast('check', msgs[currentAction]);
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── NOTIFICATIONS ─────────────────────────────────────
+function notifIcon(type) {
+  const map = {
+    breach: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    warn:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    new:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>`,
+    done:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  };
+  const bg = { breach:'#fff1f2', warn:'#fffbeb', new:'#eff6ff', done:'#f0fdf4' };
+  return `<div style="width:30px;height:30px;border-radius:50%;background:${bg[type]||'#f1f5f9'};display:flex;align-items:center;justify-content:center;flex-shrink:0">${map[type]||map.new}</div>`;
+}
+
+function openNotifModal() {
+  const list = document.getElementById('notifList');
+  list.innerHTML = NOTIFICATIONS.map((n,i) => `
+    <div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);background:${n.read?'var(--surface)':'#f8faff'};cursor:pointer;align-items:flex-start" onclick="markRead(${i})">
+      ${notifIcon(n.type)}
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--text);${n.read?'':'font-weight:600'}">${n.text}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${n.time}</div>
+      </div>
+      ${!n.read ? '<div style="width:7px;height:7px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:5px"></div>' : ''}
+    </div>
+  `).join('');
+  document.getElementById('notifModal').classList.add('open');
+}
+
+function markRead(i)  { NOTIFICATIONS[i].read = true; openNotifModal(); }
+function markAllRead() { NOTIFICATIONS.forEach(n => n.read = true); openNotifModal(); }
+
+// ── BULK / EXPORT ─────────────────────────────────────
+function bulkAction() {
+  const checked = [...document.querySelectorAll('.row-cb:checked')].map(cb => cb.dataset.id);
+  if (!checked.length) { showToast('warning', 'Select at least one submission.'); return; }
+  showToast('info', `${checked.length} submission(s) selected. Bulk action coming in Phase 2.`);
+}
+
+function exportData() { showToast('info', 'Exporting current filtered view as CSV…'); }
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-cb').forEach(c => c.checked = cb.checked);
+}
+
+function setView(v) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('topbarTitle').textContent = v === 'dashboard' ? 'Dashboard' : 'Submission Queue';
+}
+
+// ── TOAST ─────────────────────────────────────────────
+function showToast(type, msg) {
+  const icons = {
+    check:   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    warning: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    info:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    error:   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  };
+  const t = document.getElementById('toast');
+  document.getElementById('toastIcon').innerHTML = icons[type] || icons.check;
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── INIT ──────────────────────────────────────────────
+renderTable(SUBMISSIONS);
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+</script>
+</body>
+</html>

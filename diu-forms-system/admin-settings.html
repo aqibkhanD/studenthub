@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIU Student Services — Admin Settings</title>
+<style>
+/* ─── RESET & TOKENS ────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #f1f5f9;
+  --surface:   #ffffff;
+  --sidebar:   #0f2744;
+  --primary:   #1d4ed8;
+  --primary-h: #1e40af;
+  --primary-lt:#eff6ff;
+  --text:      #1e293b;
+  --muted:     #64748b;
+  --border:    #e2e8f0;
+  --red:       #dc2626;
+  --red-lt:    #fee2e2;
+  --green:     #16a34a;
+  --green-lt:  #dcfce7;
+  --amber:     #d97706;
+  --amber-lt:  #fef3c7;
+  --radius:    8px;
+  --shadow:    0 1px 3px rgba(0,0,0,.08);
+  --shadow-md: 0 4px 20px rgba(0,0,0,.12);
+}
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; font-size: 14px; }
+
+/* ─── SIDEBAR ──────────────────────────────────────── */
+.sidebar { width: 240px; background: var(--sidebar); display: flex; flex-direction: column; flex-shrink: 0; min-height: 100vh; position: sticky; top: 0; }
+.sidebar-logo { padding: 20px; border-bottom: 1px solid #ffffff14; }
+.sidebar-logo .logo-text { font-size: 15px; font-weight: 800; color: #fff; line-height: 1.3; }
+.sidebar-logo .logo-sub  { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.nav-section { padding: 16px 12px 4px; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #475569; text-transform: uppercase; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin: 1px 8px; border-radius: var(--radius); color: #94a3b8; font-size: 13px; cursor: pointer; transition: all .15s; }
+.nav-item:hover  { background: #ffffff12; color: #fff; }
+.nav-item.active { background: var(--primary); color: #fff; }
+.nav-item .ni-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.sidebar-footer { margin-top: auto; padding: 16px; border-top: 1px solid #ffffff14; }
+.admin-chip { display: flex; align-items: center; gap: 10px; }
+.admin-av { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; }
+.admin-name { font-size: 12px; font-weight: 600; color: #e2e8f0; }
+.admin-role { font-size: 10px; color: #64748b; }
+
+/* ─── MAIN ──────────────────────────────────────────── */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 28px; height: 56px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 20; box-shadow: var(--shadow); }
+.topbar h1 { font-size: 16px; font-weight: 700; }
+.topbar .breadcrumb { font-size: 12px; color: var(--muted); margin-left: 4px; }
+.topbar-back { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; text-decoration: none; cursor: pointer; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); margin-right: 8px; }
+.topbar-back:hover { background: var(--bg); color: var(--text); }
+.content { flex: 1; padding: 28px; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+/* ─── TAB NAV ───────────────────────────────────────── */
+.tab-nav { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+.tab-btn { padding: 10px 20px; font-size: 13px; font-weight: 600; color: var(--muted); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; display: flex; align-items: center; gap: 7px; }
+.tab-btn:hover  { color: var(--text); }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ─── SECTION CARD ─────────────────────────────────── */
+.settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
+.card-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.card-head h2 { font-size: 14px; font-weight: 700; }
+.card-head p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.card-body { padding: 20px; }
+
+/* ─── FORM ELEMENTS ────────────────────────────────── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: span 2; }
+.form-group.full-3 { grid-column: span 3; }
+.form-group label { font-size: 12px; font-weight: 600; color: var(--text); }
+.form-group .hint  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.form-group input[type=text],
+.form-group input[type=email],
+.form-group input[type=number],
+.form-group input[type=tel],
+.form-group select,
+.form-group textarea {
+  border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+  font-size: 13px; font-family: inherit; color: var(--text); outline: none;
+  transition: border-color .15s; background: var(--surface);
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,.07); }
+.form-group input[readonly] { background: var(--bg); color: var(--muted); }
+
+/* Toggle switch */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+.toggle-label { font-size: 13px; font-weight: 600; }
+.toggle-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.toggle { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; cursor: pointer; transition: .2s; }
+.toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .2s; }
+.toggle input:checked + .toggle-slider { background: var(--primary); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+/* ─── LOGO UPLOADER ─────────────────────────────────── */
+.logo-upload-area { display: flex; gap: 24px; align-items: flex-start; }
+.logo-preview { width: 120px; height: 120px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+.logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+.logo-placeholder { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.4; padding: 10px; }
+.logo-upload-controls { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.logo-upload-controls p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.file-drop-zone { border: 2px dashed var(--border); border-radius: 6px; padding: 16px; text-align: center; cursor: pointer; transition: all .15s; }
+.file-drop-zone:hover { border-color: var(--primary); background: var(--primary-lt); }
+.file-drop-zone .drop-label { font-size: 13px; font-weight: 600; color: var(--muted); }
+.file-drop-zone .drop-sub   { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* ─── BUTTONS ───────────────────────────────────────── */
+.btn { padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-h); }
+.btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: #e2e8f0; }
+.btn-danger  { background: var(--red-lt); color: var(--red); border: 1px solid #fecaca; }
+.btn-danger:hover  { background: var(--red); color: #fff; }
+.btn-success { background: var(--green-lt); color: var(--green); border: 1px solid #bbf7d0; }
+.btn-success:hover { background: var(--green); color: #fff; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-icon { padding: 5px; background: none; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; color: var(--muted); transition: all .15s; }
+.btn-icon:hover { background: var(--bg); color: var(--text); }
+.save-bar { display: flex; align-items: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 4px; }
+
+/* ─── TABLE ─────────────────────────────────────────── */
+.table-toolbar { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.search-box { display: flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; flex: 1; min-width: 180px; max-width: 300px; }
+.search-box input { border: none; background: none; font-size: 13px; outline: none; flex: 1; color: var(--text); }
+.filter-sel { border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 12px; background: var(--surface); color: var(--text); outline: none; }
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th { padding: 9px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); background: #f8fafc; border-bottom: 1px solid var(--border); white-space: nowrap; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:hover { background: #f8fafc; }
+tbody tr:last-child { border-bottom: none; }
+tbody td { padding: 11px 14px; font-size: 13px; vertical-align: middle; }
+.action-cell { display: flex; gap: 6px; align-items: center; }
+
+/* Badges */
+.badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.badge-active   { background: var(--green-lt);  color: var(--green); }
+.badge-inactive { background: var(--bg);  color: var(--muted); border: 1px solid var(--border); }
+.badge-admin    { background: #eff6ff; color: var(--primary); }
+.badge-student  { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+.badge-superadmin { background: #fdf4ff; color: #7c3aed; }
+.badge-academic { background: #eff6ff; color: var(--primary); }
+.badge-complaint { background: var(--red-lt); color: var(--red); }
+.badge-career   { background: var(--green-lt); color: var(--green); }
+.badge-club     { background: #fdf4ff; color: #7c3aed; }
+.badge-finance  { background: var(--amber-lt); color: var(--amber); }
+.badge-it       { background: #f0f9ff; color: #0284c7; }
+
+/* ─── MODAL ─────────────────────────────────────────── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-start; justify-content: center; z-index: 100; padding: 40px 20px; overflow-y: auto; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: 12px; width: 100%; max-width: 680px; box-shadow: var(--shadow-md); }
+.modal.modal-lg { max-width: 860px; }
+.modal-head { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; position: sticky; top: 0; background: var(--surface); border-radius: 12px 12px 0 0; z-index: 1; }
+.modal-head h3 { font-size: 15px; font-weight: 700; flex: 1; }
+.modal-body { padding: 22px; max-height: 70vh; overflow-y: auto; }
+.modal-foot { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; background: #fafafa; border-radius: 0 0 12px 12px; }
+.close-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; padding: 0; line-height: 1; }
+
+/* ─── FIELD BUILDER ─────────────────────────────────── */
+.field-builder { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.fb-header { padding: 10px 14px; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.fb-header span { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.fb-list { }
+.fb-field { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.fb-field:last-child { border-bottom: none; }
+.fb-drag { color: var(--border); cursor: grab; font-size: 16px; flex-shrink: 0; }
+.fb-field-label { flex: 1.5; }
+.fb-field-type  { flex: 1; }
+.fb-field-req   { flex: 0; white-space: nowrap; display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+.fb-field-del   { flex-shrink: 0; }
+.fb-field input, .fb-field select {
+  width: 100%; border: 1px solid var(--border); border-radius: 5px;
+  padding: 5px 8px; font-size: 12px; background: var(--surface); outline: none;
+}
+.fb-field input:focus, .fb-field select:focus { border-color: var(--primary); }
+.fb-empty { padding: 24px; text-align: center; color: var(--muted); font-size: 12px; }
+
+/* ─── CONFIRM DIALOG ────────────────────────────────── */
+.confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 200; }
+.confirm-overlay.open { display: flex; }
+.confirm-box { background: var(--surface); border-radius: 10px; padding: 24px; width: 380px; box-shadow: var(--shadow-md); }
+.confirm-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.confirm-box p  { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+.confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ─── NOTIFICATION PREFS ────────────────────────────── */
+.notif-matrix { width: 100%; border-collapse: collapse; }
+.notif-matrix th { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid var(--border); text-align: left; }
+.notif-matrix th.ch-head { text-align: center; width: 120px; }
+.notif-matrix td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+.notif-matrix tr:last-child td { border-bottom: none; }
+.notif-matrix tr:hover td { background: #f8fafc; }
+.notif-matrix .event-name  { font-weight: 600; }
+.notif-matrix .event-desc  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.notif-matrix .ch-cell { text-align: center; }
+.delivery-sel { border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 11px; font-family: inherit; color: var(--text); background: var(--surface); outline: none; cursor: pointer; transition: border-color .15s; }
+.delivery-sel:focus { border-color: var(--primary); }
+.delivery-sel.immediate { background: #f0fdf4; border-color: #bbf7d0; color: var(--green); }
+.delivery-sel.digest    { background: #eff6ff; border-color: #bfdbfe; color: var(--primary); }
+.delivery-sel.never     { background: #f8fafc; border-color: var(--border); color: var(--muted); }
+.notif-section-head { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 10px 14px 6px; background: #f8fafc; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); }
+.notif-section-head:first-child { border-top: none; }
+.digest-schedule { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.digest-schedule label { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
+.quiet-hours-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.quiet-hours-row label { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
+.inline-input { border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 13px; font-family: inherit; color: var(--text); background: var(--surface); outline: none; width: auto; }
+.inline-input:focus { border-color: var(--primary); }
+.info-banner { display: flex; gap: 12px; background: var(--primary-lt); border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #1e3a8a; line-height: 1.5; margin-bottom: 20px; }
+.info-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+/* ─── TOAST ─────────────────────────────────────────── */
+.toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md); display: none; z-index: 300; animation: slideup .2s ease; }
+.toast.show { display: block; }
+@keyframes slideup { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ─── DIVIDER ────────────────────────────────────────── */
+.section-divider { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 12px 0 8px; margin-top: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+
+/* ─── COLOR SWATCH ──────────────────────────────────── */
+.color-swatch-row { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color .15s; }
+.swatch.selected { border-color: var(--text); }
+
+/* ─── EMPTY STATE ───────────────────────────────────── */
+.empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+.empty-state .es-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.full { grid-column: span 1; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SIDEBAR                                           -->
+<!-- ══════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">DIU Student<br>Services</div>
+    <div class="logo-sub">Admin Portal</div>
+  </div>
+
+  <div class="nav-section">Main</div>
+  <div class="nav-item" onclick="window.location='management-dashboard.html'">
+    <svg class="ni-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Overview
+  </div>
+  <div class="nav-item" onclick="window.location='admin-dashboard.html'">
+    <svg class="ni-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    Admin Dashboard
+  </div>
+  <div class="nav-item" onclick="window.location='admin-dashboard.html'">
+    <svg class="ni-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4"/></svg>
+    Submission Queue
+  </div>
+  <div class="nav-item" onclick="window.location='student-portal.html'">
+    <svg class="ni-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+    Student Portal
+  </div>
+
+  <div class="nav-section">Settings</div>
+  <div class="nav-item active" onclick="switchTab('branding', this)">
+    <svg class="ni-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+    Branding
+  </div>
+  <div class="nav-item" onclick="switchTab('forms', this)">
+    <svg class="ni-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    Form Types
+  </div>
+  <div class="nav-item" onclick="switchTab('departments', this)">
+    <svg class="ni-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+    Departments
+  </div>
+  <div class="nav-item" onclick="switchTab('users', this)">
+    <svg class="ni-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+    Users &amp; Roles
+  </div>
+  <div class="nav-item" onclick="switchTab('notifications', this)">
+    <svg class="ni-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+    Notifications
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="admin-chip">
+      <div class="admin-av">RA</div>
+      <div>
+        <div class="admin-name">Rafiq Ahmed</div>
+        <div class="admin-role">Super Admin</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- MAIN                                              -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="main">
+  <div class="topbar">
+    <button class="topbar-back" onclick="window.location='admin-dashboard.html'">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      Dashboard
+    </button>
+    <h1>System Settings</h1>
+    <span class="breadcrumb">/ Admin Configuration</span>
+  </div>
+
+  <div class="content">
+    <!-- Tab navigation -->
+    <div class="tab-nav">
+      <button class="tab-btn active" id="tab-branding"     onclick="switchTab('branding', this)">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343"/></svg>
+        Branding
+      </button>
+      <button class="tab-btn" id="tab-forms"         onclick="switchTab('forms', this)">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Form Types
+      </button>
+      <button class="tab-btn" id="tab-departments"   onclick="switchTab('departments', this)">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16"/></svg>
+        Departments
+      </button>
+      <button class="tab-btn" id="tab-users"         onclick="switchTab('users', this)">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1z"/></svg>
+        Users &amp; Roles
+      </button>
+      <button class="tab-btn" id="tab-notifications" onclick="switchTab('notifications', this)">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        Notifications
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: BRANDING                                 -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div class="tab-pane active" id="pane-branding">
+
+      <!-- Logo -->
+      <div class="settings-card">
+        <div class="card-head">
+          <div>
+            <h2>University Logo</h2>
+            <p>Displayed in the portal header and embedded in all generated PDF certificates.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="logo-upload-area">
+            <div class="logo-preview" id="logoPreview">
+              <div class="logo-placeholder">No logo uploaded</div>
+            </div>
+            <div class="logo-upload-controls">
+              <p>Upload a PNG or SVG with a transparent background. Recommended size: 300 × 300 px. Maximum file size: 1 MB.</p>
+              <div class="file-drop-zone" onclick="document.getElementById('logoInput').click()">
+                <div class="drop-label">Click to upload logo</div>
+                <div class="drop-sub">PNG, SVG — max 1 MB</div>
+              </div>
+              <input type="file" id="logoInput" accept=".png,.svg,.jpg" style="display:none" onchange="previewLogo(this)">
+              <div style="display:flex;gap:8px;margin-top:4px;">
+                <button class="btn btn-primary btn-sm" onclick="saveLogo()">Save Logo</button>
+                <button class="btn btn-secondary btn-sm" onclick="removeLogo()">Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- University details -->
+      <div class="settings-card">
+        <div class="card-head">
+          <div>
+            <h2>University Details</h2>
+            <p>Shown in the portal header and in all generated documents.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>University Full Name</label>
+              <input type="text" value="Daffodil International University">
+            </div>
+            <div class="form-group full">
+              <label>Address</label>
+              <input type="text" value="Birulia, Savar, Dhaka-1216, Bangladesh">
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" value="+880-2-9138234">
+            </div>
+            <div class="form-group">
+              <label>Official Email</label>
+              <input type="email" value="info@diu.edu.bd">
+            </div>
+            <div class="form-group full">
+              <label>Website</label>
+              <input type="text" value="www.daffodilvarsity.edu.bd">
+            </div>
+          </div>
+          <div class="save-bar">
+            <button class="btn btn-primary" onclick="showToast('University details saved.')">Save Changes</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Portal settings -->
+      <div class="settings-card">
+        <div class="card-head">
+          <div><h2>Portal Configuration</h2><p>Branding and feature flags for the student-facing portal.</p></div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid" style="margin-bottom:18px;">
+            <div class="form-group">
+              <label>Portal Name</label>
+              <input type="text" value="DIU Student Services">
+              <span class="hint">Appears in the browser tab and portal header.</span>
+            </div>
+            <div class="form-group">
+              <label>Support Email</label>
+              <input type="email" value="support@diu.edu.bd">
+              <span class="hint">Shown to students when they need help.</span>
+            </div>
+            <div class="form-group">
+              <label>Primary Colour</label>
+              <input type="text" id="colorInput" value="#1d4ed8" style="font-family:monospace;">
+              <div class="color-swatch-row" id="swatchRow">
+                <div class="swatch selected" style="background:#1d4ed8" onclick="pickColor('#1d4ed8',this)"></div>
+                <div class="swatch" style="background:#0d2b4e" onclick="pickColor('#0d2b4e',this)"></div>
+                <div class="swatch" style="background:#15803d" onclick="pickColor('#15803d',this)"></div>
+                <div class="swatch" style="background:#7c3aed" onclick="pickColor('#7c3aed',this)"></div>
+                <div class="swatch" style="background:#b8922a" onclick="pickColor('#b8922a',this)"></div>
+                <div class="swatch" style="background:#0284c7" onclick="pickColor('#0284c7',this)"></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Default Language</label>
+              <select>
+                <option selected>English</option>
+                <option>Bangla (coming soon)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="section-divider">Feature Flags</div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Student Self-Registration</div>
+              <div class="toggle-sub">Allow students to create their own accounts via the portal.</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Anonymous Complaint Submissions</div>
+              <div class="toggle-sub">Allow complaint forms to be submitted without displaying student identity to admins.</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">SMS Notifications</div>
+              <div class="toggle-sub">Send status update SMS messages to students via SSL Wireless.</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Public Certificate Verification</div>
+              <div class="toggle-sub">Allow third parties to verify certificates at forms.diu.edu.bd/verify/{ref}.</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Maintenance Mode</div>
+              <div class="toggle-sub">Show a maintenance notice to students. Admins can still log in.</div>
+            </div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="save-bar">
+            <button class="btn btn-primary" onclick="showToast('Portal settings saved.')">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /pane-branding -->
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: FORM TYPES                               -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div class="tab-pane" id="pane-forms">
+      <div class="settings-card">
+        <div class="card-head">
+          <div><h2>Form Types</h2><p>Manage all submission form types available to students.</p></div>
+          <button class="btn btn-primary" onclick="openFormTypeModal()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Form Type
+          </button>
+        </div>
+        <div class="table-toolbar">
+          <div class="search-box">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+            <input type="text" id="ftSearch" placeholder="Search form types…" oninput="filterFormTypes()">
+          </div>
+          <select class="filter-sel" id="ftCatFilter" onchange="filterFormTypes()">
+            <option value="">All Categories</option>
+            <option value="academic_certification">Academic &amp; Certification</option>
+            <option value="complaint">Complaints</option>
+            <option value="career_counseling">Career Counseling</option>
+            <option value="club_cocurricular">Club &amp; Co-curricular</option>
+            <option value="finance">Finance</option>
+            <option value="it_support">IT Support</option>
+          </select>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Form Name</th>
+                <th>Category</th>
+                <th>Department</th>
+                <th>SLA</th>
+                <th>Fields</th>
+                <th>Options</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="formTypesBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /pane-forms -->
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: DEPARTMENTS                              -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div class="tab-pane" id="pane-departments">
+      <div class="settings-card">
+        <div class="card-head">
+          <div><h2>Departments</h2><p>Manage routing departments, SLA defaults, and document signatories.</p></div>
+          <button class="btn btn-primary" onclick="openDeptModal()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Department
+          </button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Department Name</th>
+                <th>Slug</th>
+                <th>Contact Email</th>
+                <th>SLA Default</th>
+                <th>Signatory</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="deptsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /pane-departments -->
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: USERS                                    -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div class="tab-pane" id="pane-users">
+      <div class="settings-card">
+        <div class="card-head">
+          <div><h2>Users &amp; Roles</h2><p>Manage student accounts, admin assignments, and role permissions.</p></div>
+          <button class="btn btn-primary" onclick="openUserModal()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            Add Admin User
+          </button>
+        </div>
+        <div class="table-toolbar">
+          <div class="search-box">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+            <input type="text" placeholder="Search by name or student ID…" oninput="filterUsers(this.value)">
+          </div>
+          <select class="filter-sel" id="roleFilter" onchange="filterUsers()">
+            <option value="">All Roles</option>
+            <option value="student">Student</option>
+            <option value="admin">Admin</option>
+            <option value="super_admin">Super Admin</option>
+          </select>
+          <select class="filter-sel" id="statusFilter" onchange="filterUsers()">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Student / Staff ID</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /pane-users -->
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: NOTIFICATIONS                            -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div class="tab-pane" id="pane-notifications">
+
+      <!-- Info banner -->
+      <div class="info-banner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>These are your personal notification preferences. Changes only affect your account. Digest emails batch multiple events into a single message to reduce inbox noise. <strong>Immediate</strong> alerts are reserved for time-sensitive events that require action.</span>
+      </div>
+
+      <!-- Delivery channels -->
+      <div class="settings-card" style="margin-bottom:20px">
+        <div class="card-head">
+          <div>
+            <h2>Delivery Channels</h2>
+            <p>Where you receive notifications</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" value="rafiq.ahmed@diu.edu.bd" readonly>
+              <span class="hint">From your account profile. Update in your profile settings.</span>
+            </div>
+            <div class="form-group">
+              <label>Mobile Number (SMS)</label>
+              <input type="tel" id="notif_phone" value="+8801711223344">
+              <span class="hint">Bangladesh number. Used for urgent SMS alerts only.</span>
+            </div>
+          </div>
+          <div style="margin-top:18px">
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Email notifications enabled</div>
+                <div class="toggle-sub">Receive email for events configured as Immediate or Digest below</div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="ch_email" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">SMS notifications enabled</div>
+                <div class="toggle-sub">Only events marked Immediate will trigger SMS. Digest events never send SMS.</div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="ch_sms" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">In-app notifications</div>
+                <div class="toggle-sub">Bell icon alerts within the admin dashboard. Cannot be disabled.</div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked disabled><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event preferences matrix -->
+      <div class="settings-card" style="margin-bottom:20px">
+        <div class="card-head">
+          <div>
+            <h2>Event Preferences</h2>
+            <p>Configure how you are notified for each event type</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="resetNotifDefaults()">Reset to Defaults</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="notif-matrix" id="notifMatrix">
+            <thead>
+              <tr>
+                <th style="width:40%">Event</th>
+                <th class="ch-head">Email</th>
+                <th class="ch-head">SMS</th>
+                <th class="ch-head">In-App</th>
+              </tr>
+            </thead>
+            <tbody id="notifMatrixBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Digest schedule -->
+      <div class="settings-card" style="margin-bottom:20px">
+        <div class="card-head">
+          <div>
+            <h2>Digest Schedule</h2>
+            <p>When batched digest emails are sent</p>
+          </div>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
+          <div class="digest-schedule">
+            <label>Hourly digest: send at</label>
+            <select class="inline-input" id="digest_minute" style="width:auto">
+              <option value="0">:00 (top of hour)</option>
+              <option value="15">:15</option>
+              <option value="30" selected>:30 (half hour)</option>
+              <option value="45">:45</option>
+            </select>
+            <span style="font-size:12px;color:var(--muted)">of each hour, if there are pending events</span>
+          </div>
+          <div class="digest-schedule">
+            <label>Daily digest: send at</label>
+            <input type="time" class="inline-input" id="digest_daily_time" value="08:00">
+            <span style="font-size:12px;color:var(--muted)">each morning (Bangladesh Standard Time)</span>
+          </div>
+          <div class="digest-schedule">
+            <label>Minimum events before digest sends:</label>
+            <input type="number" class="inline-input" id="digest_min" value="2" min="1" max="20" style="width:70px">
+            <span style="font-size:12px;color:var(--muted)">events (prevents single-item digests)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quiet hours / anti-spam -->
+      <div class="settings-card" style="margin-bottom:20px">
+        <div class="card-head">
+          <div>
+            <h2>Quiet Hours</h2>
+            <p>Suppress SMS and non-critical emails during these hours</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="toggle-row" style="margin-bottom:14px">
+            <div>
+              <div class="toggle-label">Enable quiet hours</div>
+              <div class="toggle-sub">SMS and digest emails are held until quiet hours end. Escalations and SLA breaches still send immediately.</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="quiet_enabled" checked onchange="toggleQuietHours()"><span class="toggle-slider"></span></label>
+          </div>
+          <div id="quietHoursFields" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+            <div class="quiet-hours-row">
+              <label>Start:</label>
+              <input type="time" class="inline-input" id="quiet_start" value="22:00">
+            </div>
+            <div class="quiet-hours-row">
+              <label>End:</label>
+              <input type="time" class="inline-input" id="quiet_end" value="07:30">
+            </div>
+            <span style="font-size:11px;color:var(--muted)">Bangladesh Standard Time (UTC+6)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spam prevention rules (read-only info) -->
+      <div class="settings-card" style="margin-bottom:20px">
+        <div class="card-head">
+          <div>
+            <h2>Spam Prevention Rules</h2>
+            <p>System-enforced limits that apply to all admin accounts regardless of preferences</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr>
+                <th style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:8px 14px;background:#f8fafc;border-bottom:1px solid var(--border);text-align:left">Rule</th>
+                <th style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:8px 14px;background:#f8fafc;border-bottom:1px solid var(--border);text-align:left">Limit</th>
+                <th style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:8px 14px;background:#f8fafc;border-bottom:1px solid var(--border);text-align:left">Applies To</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:10px 14px;font-size:13px;font-weight:600">Max emails per hour</td>
+                <td style="padding:10px 14px;font-size:13px;color:var(--primary);font-weight:700">10</td>
+                <td style="padding:10px 14px;font-size:12px;color:var(--muted)">All channels except in-app</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:10px 14px;font-size:13px;font-weight:600">Max SMS per day</td>
+                <td style="padding:10px 14px;font-size:13px;color:var(--primary);font-weight:700">5</td>
+                <td style="padding:10px 14px;font-size:12px;color:var(--muted)">Per admin account</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:10px 14px;font-size:13px;font-weight:600">Duplicate suppression window</td>
+                <td style="padding:10px 14px;font-size:13px;color:var(--primary);font-weight:700">30 minutes</td>
+                <td style="padding:10px 14px;font-size:12px;color:var(--muted)">Same event, same submission</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:10px 14px;font-size:13px;font-weight:600">Super admin individual emails</td>
+                <td style="padding:10px 14px;font-size:13px;color:var(--amber);font-weight:700">Disabled by default</td>
+                <td style="padding:10px 14px;font-size:12px;color:var(--muted)">Super admin role only</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 14px;font-size:13px;font-weight:600">One-click unsubscribe</td>
+                <td style="padding:10px 14px;font-size:13px;color:var(--green);font-weight:700">Required on all emails</td>
+                <td style="padding:10px 14px;font-size:12px;color:var(--muted)">Every outbound email</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="save-bar">
+        <button class="btn btn-primary" onclick="saveNotifPrefs()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Preferences
+        </button>
+        <span class="hint" id="notifSaveStatus"></span>
+      </div>
+
+    </div><!-- /pane-notifications -->
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- FORM TYPE MODAL                                   -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="formTypeModal">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <h3 id="ftModalTitle">Add Form Type</h3>
+      <button class="close-btn" onclick="closeModal('formTypeModal')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="margin-bottom:18px;">
+        <div class="form-group">
+          <label>Form Name <span style="color:var(--red)">*</span></label>
+          <input type="text" id="ft_name" placeholder="e.g. Bonafide Certificate" oninput="autoSlug()">
+        </div>
+        <div class="form-group">
+          <label>URL Slug</label>
+          <input type="text" id="ft_slug" placeholder="auto-generated" style="font-family:monospace;font-size:12px;" readonly>
+        </div>
+        <div class="form-group">
+          <label>Category <span style="color:var(--red)">*</span></label>
+          <select id="ft_category">
+            <option value="">— Select —</option>
+            <option value="academic_certification">Academic &amp; Certification</option>
+            <option value="complaint">Complaint</option>
+            <option value="career_counseling">Career Counseling</option>
+            <option value="club_cocurricular">Club &amp; Co-curricular</option>
+            <option value="finance">Finance</option>
+            <option value="it_support">IT Support</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Routed to Department <span style="color:var(--red)">*</span></label>
+          <select id="ft_dept">
+            <option value="">— Select —</option>
+            <option value="1">Registrar's Office</option>
+            <option value="2">Exam Controller</option>
+            <option value="3">Student Affairs</option>
+            <option value="4">Career Services</option>
+            <option value="5">Club &amp; Co-curricular</option>
+            <option value="6">Finance &amp; Accounts</option>
+            <option value="7">IT Department</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>SLA (hours) <span style="color:var(--red)">*</span></label>
+          <input type="number" id="ft_sla" value="48" min="1">
+          <span class="hint">Leave blank to use the department default.</span>
+        </div>
+        <div class="form-group">
+          <label>Sort Order</label>
+          <input type="number" id="ft_sort" value="0" min="0">
+        </div>
+        <div class="form-group full">
+          <label>Student-Facing Instructions</label>
+          <textarea id="ft_instructions" rows="3" placeholder="Instructions shown to the student before they fill out the form…"></textarea>
+        </div>
+      </div>
+
+      <div class="section-divider">Options</div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Requires Document Upload</div><div class="toggle-sub">Student must attach supporting documents when submitting.</div></div>
+        <label class="toggle"><input type="checkbox" id="ft_req_docs"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Allow Anonymous Submission</div><div class="toggle-sub">Student can hide their identity from admin staff. Applies to complaint forms only.</div></div>
+        <label class="toggle"><input type="checkbox" id="ft_allow_anon"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Auto-Generate PDF on Approval</div><div class="toggle-sub">System generates a PDF certificate automatically when an admin approves this form type.</div></div>
+        <label class="toggle"><input type="checkbox" id="ft_auto_pdf"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Active (visible to students)</div><div class="toggle-sub">Inactive form types are hidden from the student portal.</div></div>
+        <label class="toggle"><input type="checkbox" id="ft_active" checked><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="section-divider" style="margin-top:20px;">Form Fields</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Define the fields students will fill in when submitting this form type.</p>
+      <div class="field-builder">
+        <div class="fb-header">
+          <span>Fields</span>
+          <button class="btn btn-secondary btn-sm" onclick="addField()">+ Add Field</button>
+        </div>
+        <div id="fieldList">
+          <div class="fb-empty">No fields added yet. Click "Add Field" to begin.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('formTypeModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFormType()">Save Form Type</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- DEPARTMENT MODAL                                  -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="deptModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="deptModalTitle">Add Department</h3>
+      <button class="close-btn" onclick="closeModal('deptModal')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="margin-bottom:18px;">
+        <div class="form-group">
+          <label>Department Name <span style="color:var(--red)">*</span></label>
+          <input type="text" id="dept_name" placeholder="e.g. Registrar's Office" oninput="autoDeptSlug()">
+        </div>
+        <div class="form-group">
+          <label>Slug</label>
+          <input type="text" id="dept_slug" readonly style="font-family:monospace;font-size:12px;">
+        </div>
+        <div class="form-group">
+          <label>Contact Email</label>
+          <input type="email" id="dept_email" placeholder="dept@diu.edu.bd">
+        </div>
+        <div class="form-group">
+          <label>Contact Phone</label>
+          <input type="tel" id="dept_phone" placeholder="+880-2-...">
+        </div>
+        <div class="form-group">
+          <label>Default SLA (hours) <span style="color:var(--red)">*</span></label>
+          <input type="number" id="dept_sla" value="48" min="1">
+        </div>
+        <div class="form-group">
+          <label>Department Head</label>
+          <select id="dept_head">
+            <option value="">— Unassigned —</option>
+            <option>Rafiq Ahmed</option>
+            <option>Karim Uddin</option>
+            <option>Dr. Sharmin Sultana</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-divider">Document Signatory</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">The person whose name appears on auto-generated certificates and letters for this department.</p>
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div class="form-group">
+          <label>Signatory Full Name <span style="color:var(--red)">*</span></label>
+          <input type="text" id="sig_name" placeholder="e.g. Prof. Dr. Md. Abdur Rahman">
+        </div>
+        <div class="form-group">
+          <label>Title / Designation</label>
+          <input type="text" id="sig_title" placeholder="e.g. Registrar">
+        </div>
+        <div class="form-group">
+          <label>Department (on certificate)</label>
+          <input type="text" id="sig_dept_label" placeholder="e.g. Office of the Registrar">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="sig_email" placeholder="registrar@diu.edu.bd">
+        </div>
+        <div class="form-group full">
+          <label>Signature Image</label>
+          <div class="file-drop-zone" onclick="document.getElementById('sigInput').click()" style="padding:10px;text-align:left;display:flex;align-items:center;gap:10px;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            <div>
+              <div class="drop-label" style="text-align:left">Upload signature image</div>
+              <div class="drop-sub" style="text-align:left">PNG with transparent background, max 200 KB</div>
+            </div>
+          </div>
+          <input type="file" id="sigInput" accept=".png" style="display:none">
+          <span class="hint">Leave blank to use a signature line on generated documents.</span>
+        </div>
+      </div>
+
+      <div class="section-divider">SLA Escalation</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Escalate After (hours)</label>
+          <input type="number" id="dept_esc_hours" placeholder="e.g. 72">
+          <span class="hint">Hours after SLA breach before automatic escalation.</span>
+        </div>
+        <div class="form-group">
+          <label>Notify Student on Escalation</label>
+          <select id="dept_esc_notify">
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('deptModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDept()">Save Department</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- USER MODAL                                        -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="userModalTitle">Add Admin User</h3>
+      <button class="close-btn" onclick="closeModal('userModal')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Full Name <span style="color:var(--red)">*</span></label>
+          <input type="text" id="u_name" placeholder="e.g. Karim Uddin">
+        </div>
+        <div class="form-group">
+          <label>Email <span style="color:var(--red)">*</span></label>
+          <input type="email" id="u_email" placeholder="karim@diu.edu.bd">
+        </div>
+        <div class="form-group">
+          <label>Role <span style="color:var(--red)">*</span></label>
+          <select id="u_role">
+            <option value="admin">Admin</option>
+            <option value="super_admin">Super Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Assigned Department</label>
+          <select id="u_dept">
+            <option value="">— Select —</option>
+            <option>Registrar's Office</option>
+            <option>Exam Controller</option>
+            <option>Student Affairs</option>
+            <option>Career Services</option>
+            <option>Finance &amp; Accounts</option>
+            <option>IT Department</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" id="u_phone" placeholder="+8801...">
+        </div>
+        <div class="form-group">
+          <label>Temporary Password <span style="color:var(--red)">*</span></label>
+          <input type="text" id="u_pass" placeholder="Min. 8 characters">
+          <span class="hint">User will be prompted to change on first login.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('userModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">Confirm Action</h3>
+    <p id="confirmMessage">Are you sure you want to proceed?</p>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirmOkBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT                                        -->
+<!-- ══════════════════════════════════════════════════ -->
+<script>
+// ── DATA ─────────────────────────────────────────────
+let FORM_TYPES = [
+  { id:1,  name:'Bonafide Certificate',       slug:'bonafide-certificate',      category:'academic_certification', dept:'Registrar\'s Office', sla:24,  fields:4, req_docs:false, allow_anon:false, auto_pdf:true,  active:true  },
+  { id:2,  name:'Character Certificate',      slug:'character-certificate',     category:'academic_certification', dept:'Registrar\'s Office', sla:48,  fields:3, req_docs:false, allow_anon:false, auto_pdf:false, active:true  },
+  { id:3,  name:'Migration Certificate',      slug:'migration-certificate',     category:'academic_certification', dept:'Registrar\'s Office', sla:120, fields:3, req_docs:true,  allow_anon:false, auto_pdf:false, active:true  },
+  { id:4,  name:'Eligibility Certificate',    slug:'eligibility-certificate',   category:'academic_certification', dept:'Exam Controller',     sla:72,  fields:2, req_docs:true,  allow_anon:false, auto_pdf:false, active:true  },
+  { id:5,  name:'Completion Letter',          slug:'completion-letter',         category:'academic_certification', dept:'Exam Controller',     sla:72,  fields:4, req_docs:false, allow_anon:false, auto_pdf:true,  active:true  },
+  { id:6,  name:'Student Complaint',          slug:'student-complaint',         category:'complaint',              dept:'Student Affairs',     sla:24,  fields:4, req_docs:true,  allow_anon:true,  auto_pdf:false, active:true  },
+  { id:7,  name:'Misconduct Report',          slug:'misconduct-report',         category:'complaint',              dept:'Student Affairs',     sla:12,  fields:4, req_docs:true,  allow_anon:true,  auto_pdf:false, active:true  },
+  { id:8,  name:'Career Counseling Request',  slug:'career-counseling',         category:'career_counseling',      dept:'Career Services',     sla:48,  fields:4, req_docs:false, allow_anon:false, auto_pdf:false, active:true  },
+  { id:9,  name:'Internship Letter Request',  slug:'internship-letter',         category:'career_counseling',      dept:'Career Services',     sla:48,  fields:5, req_docs:false, allow_anon:false, auto_pdf:true,  active:true  },
+  { id:10, name:'Club Membership Application',slug:'club-membership',           category:'club_cocurricular',      dept:'Club & Co-curricular',sla:72,  fields:3, req_docs:false, allow_anon:false, auto_pdf:false, active:true  },
+  { id:11, name:'New Club Formation Request', slug:'new-club-formation',        category:'club_cocurricular',      dept:'Club & Co-curricular',sla:168, fields:5, req_docs:true,  allow_anon:false, auto_pdf:false, active:true  },
+  { id:12, name:'Fee Waiver Request',         slug:'fee-waiver',                category:'finance',                dept:'Finance & Accounts',  sla:96,  fields:4, req_docs:true,  allow_anon:false, auto_pdf:false, active:true  },
+  { id:13, name:'Scholarship Application',    slug:'scholarship-application',   category:'finance',                dept:'Finance & Accounts',  sla:120, fields:5, req_docs:true,  allow_anon:false, auto_pdf:false, active:true  },
+  { id:14, name:'IT Support Ticket',          slug:'it-support',                category:'it_support',             dept:'IT Department',       sla:24,  fields:3, req_docs:false, allow_anon:false, auto_pdf:false, active:true  },
+];
+
+let DEPARTMENTS = [
+  { id:1, name:'Registrar\'s Office',  slug:'registrar',       email:'registrar@diu.edu.bd',      sla:48,  signatory:'Prof. Dr. Md. Abdur Rahman', active:true  },
+  { id:2, name:'Exam Controller',      slug:'exam-controller', email:'exam@diu.edu.bd',            sla:72,  signatory:'Dr. Sharmin Sultana',        active:true  },
+  { id:3, name:'Student Affairs',      slug:'student-affairs', email:'studentaffairs@diu.edu.bd',  sla:24,  signatory:'Prof. Dr. Farhana Begum',    active:true  },
+  { id:4, name:'Career Services',      slug:'career-services', email:'career@diu.edu.bd',          sla:48,  signatory:'Mr. Md. Kamrul Hasan',       active:true  },
+  { id:5, name:'Club & Co-curricular', slug:'clubs',           email:'clubs@diu.edu.bd',           sla:72,  signatory:'Unassigned',                 active:true  },
+  { id:6, name:'Finance & Accounts',   slug:'finance',         email:'finance@diu.edu.bd',         sla:72,  signatory:'Unassigned',                 active:true  },
+  { id:7, name:'IT Department',        slug:'it',              email:'it@diu.edu.bd',              sla:24,  signatory:'Unassigned',                 active:true  },
+];
+
+let USERS = [
+  { id:1,  name:'Rafiq Ahmed',       sid:'STAFF-001', email:'rafiq@diu.edu.bd',    role:'super_admin', dept:'Registrar\'s Office', active:true  },
+  { id:2,  name:'Karim Uddin',       sid:'STAFF-002', email:'karim@diu.edu.bd',    role:'admin',       dept:'Student Affairs',     active:true  },
+  { id:3,  name:'Dr. Sharmin Sultana',sid:'STAFF-003',email:'sharmin@diu.edu.bd',  role:'admin',       dept:'Exam Controller',     active:true  },
+  { id:4,  name:'Md. Ariful Islam',  sid:'221-15-5812',email:'ariful@s.diu.edu.bd',role:'student',     dept:'—',                   active:true  },
+  { id:5,  name:'Nadia Rahman',      sid:'221-15-5901',email:'nadia@s.diu.edu.bd', role:'student',     dept:'—',                   active:true  },
+  { id:6,  name:'Tanvir Ahmed',      sid:'219-15-4321',email:'tanvir@s.diu.edu.bd',role:'student',     dept:'—',                   active:false },
+  { id:7,  name:'Sadia Islam',       sid:'STAFF-004', email:'sadia@diu.edu.bd',    role:'admin',       dept:'Finance & Accounts',  active:true  },
+  { id:8,  name:'IT Admin',          sid:'STAFF-005', email:'itadmin@diu.edu.bd',  role:'admin',       dept:'IT Department',       active:true  },
+];
+
+// ── TABS ──────────────────────────────────────────────
+function switchTab(tab, trigger) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('pane-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab)?.classList.add('active');
+  if (trigger) trigger.classList.add('active');
+  // Update URL hash so deep links work without full navigation
+  history.replaceState(null, '', '#' + tab);
+  if (tab === 'forms')         renderFormTypes(FORM_TYPES);
+  if (tab === 'departments')   renderDepts(DEPARTMENTS);
+  if (tab === 'users')         renderUsers(USERS);
+  if (tab === 'notifications') renderNotifMatrix();
+}
+
+// Open the correct tab if the page was loaded with a hash
+(function handleHashOnLoad() {
+  const hashMap = {
+    '#form-types':     'forms',
+    '#departments':    'departments',
+    '#users':          'users',
+    '#branding':       'branding',
+    '#forms':          'forms',
+    '#notifications':  'notifications',
+  };
+  const target = hashMap[window.location.hash];
+  if (target) {
+    // Find the sidebar nav-item for this tab and activate it
+    const navItems = document.querySelectorAll('.nav-item');
+    let trigger = null;
+    navItems.forEach(n => {
+      if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + target + "'")) {
+        trigger = n;
+      }
+    });
+    switchTab(target, trigger);
+  }
+})();
+
+// ── FORM TYPES TABLE ──────────────────────────────────
+// NOTE: var (not const) so it's available before handleHashOnLoad runs above
+var CAT_LABELS = {
+  academic_certification: ['badge-academic','Academic & Certs'],
+  complaint:              ['badge-complaint','Complaint'],
+  career_counseling:      ['badge-career','Career'],
+  club_cocurricular:      ['badge-club','Club & Events'],
+  finance:                ['badge-finance','Finance'],
+  it_support:             ['badge-it','IT Support'],
+  other:                  ['badge-student','Other'],
+};
+
+function renderFormTypes(data) {
+  const body = document.getElementById('formTypesBody');
+  if (!data.length) { body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">No form types found.</td></tr>'; return; }
+  body.innerHTML = data.map(f => {
+    const [cls, lbl] = CAT_LABELS[f.category] || ['badge-student','Other'];
+    const opts = [
+      f.req_docs   ? '<span class="badge" style="background:#fef3c7;color:#92400e">Docs</span>' : '',
+      f.allow_anon ? '<span class="badge" style="background:#fdf4ff;color:#6b21a8">Anon</span>' : '',
+      f.auto_pdf   ? '<span class="badge" style="background:#dcfce7;color:#14532d">PDF</span>'  : '',
+    ].filter(Boolean).join(' ');
+    return `
+      <tr>
+        <td><span style="font-weight:600">${f.name}</span><br><span style="font-size:11px;color:var(--muted);font-family:monospace">${f.slug}</span></td>
+        <td><span class="badge ${cls}">${lbl}</span></td>
+        <td style="font-size:12px">${f.dept}</td>
+        <td style="font-size:12px">${f.sla}h</td>
+        <td style="font-size:12px;color:var(--muted)">${f.fields} fields</td>
+        <td>${opts || '<span style="color:var(--muted);font-size:11px">None</span>'}</td>
+        <td>
+          <label class="toggle" title="Toggle active"><input type="checkbox" ${f.active?'checked':''} onchange="toggleFormActive(${f.id},this)"><span class="toggle-slider"></span></label>
+        </td>
+        <td>
+          <div class="action-cell">
+            <button class="btn btn-secondary btn-sm" onclick="editFormType(${f.id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDelete('form',${f.id},'${f.name}')">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function filterFormTypes() {
+  const search = (document.getElementById('ftSearch')?.value || '').toLowerCase().trim();
+  const cat    = document.getElementById('ftCatFilter')?.value || '';
+  renderFormTypes(FORM_TYPES.filter(f => {
+    const matchSearch = !search || f.name.toLowerCase().includes(search) || f.slug.includes(search);
+    const matchCat    = !cat    || f.category === cat;
+    return matchSearch && matchCat;
+  }));
+}
+
+function toggleFormActive(id, cb) {
+  const ft = FORM_TYPES.find(f => f.id === id);
+  if (ft) ft.active = cb.checked;
+  showToast(cb.checked ? `"${ft.name}" is now active.` : `"${ft.name}" has been deactivated.`);
+}
+
+// ── FORM TYPE MODAL ───────────────────────────────────
+let editingFormTypeId = null;
+let formFields = [];
+
+function openFormTypeModal(prefill = null) {
+  editingFormTypeId = null;
+  formFields = [];
+  document.getElementById('ftModalTitle').textContent = 'Add Form Type';
+  ['ft_name','ft_slug','ft_instructions'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('ft_category').value = '';
+  document.getElementById('ft_dept').value = '';
+  document.getElementById('ft_sla').value = '48';
+  document.getElementById('ft_sort').value = '0';
+  ['ft_req_docs','ft_allow_anon','ft_auto_pdf'].forEach(id => document.getElementById(id).checked = false);
+  document.getElementById('ft_active').checked = true;
+  renderFieldList();
+  document.getElementById('formTypeModal').classList.add('open');
+}
+
+function editFormType(id) {
+  const f = FORM_TYPES.find(x => x.id === id);
+  if (!f) return;
+  editingFormTypeId = id;
+  document.getElementById('ftModalTitle').textContent = 'Edit Form Type';
+  document.getElementById('ft_name').value         = f.name;
+  document.getElementById('ft_slug').value         = f.slug;
+  document.getElementById('ft_sla').value          = f.sla;
+  document.getElementById('ft_sort').value         = f.sort || 0;
+  document.getElementById('ft_instructions').value = f.instructions || '';
+  document.getElementById('ft_active').checked     = f.active;
+  document.getElementById('ft_req_docs').checked   = f.req_docs   || false;
+  document.getElementById('ft_allow_anon').checked = f.allow_anon || false;
+  document.getElementById('ft_auto_pdf').checked   = f.auto_pdf   || false;
+  // Set category dropdown
+  document.getElementById('ft_category').value = f.category || '';
+  // Set department dropdown — match by dept name
+  const deptSel = document.getElementById('ft_dept');
+  const deptOpt = Array.from(deptSel.options).find(o => o.text === f.dept || o.value === String(f.dept_id));
+  deptSel.value = deptOpt ? deptOpt.value : '';
+  formFields = Array.isArray(f._fields) ? f._fields : [];
+  renderFieldList();
+  document.getElementById('formTypeModal').classList.add('open');
+}
+
+function saveFormType() {
+  const name     = document.getElementById('ft_name').value.trim();
+  const category = document.getElementById('ft_category').value;
+  if (!name)     { showToast('Form name is required.');     return; }
+  if (!category) { showToast('Please select a category.'); return; }
+
+  // Resolve dept name from the select option text
+  const deptSel  = document.getElementById('ft_dept');
+  const deptName = deptSel.options[deptSel.selectedIndex]?.text || '';
+  if (!deptName || deptName.startsWith('—')) { showToast('Please select a department.'); return; }
+
+  const patch = {
+    name,
+    slug:        document.getElementById('ft_slug').value.trim(),
+    category,
+    dept:        deptName,
+    sla:         +document.getElementById('ft_sla').value || 48,
+    sort:        +document.getElementById('ft_sort').value || 0,
+    instructions:document.getElementById('ft_instructions').value.trim(),
+    req_docs:    document.getElementById('ft_req_docs').checked,
+    allow_anon:  document.getElementById('ft_allow_anon').checked,
+    auto_pdf:    document.getElementById('ft_auto_pdf').checked,
+    active:      document.getElementById('ft_active').checked,
+    fields:      formFields.length,
+    _fields:     formFields.slice(),
+  };
+
+  if (editingFormTypeId) {
+    const idx = FORM_TYPES.findIndex(x => x.id === editingFormTypeId);
+    if (idx !== -1) FORM_TYPES[idx] = Object.assign(FORM_TYPES[idx], patch);
+    showToast(`"${name}" updated successfully.`);
+  } else {
+    FORM_TYPES.push(Object.assign({ id: Date.now() }, patch));
+    showToast(`"${name}" created successfully.`);
+  }
+  filterFormTypes();   // re-render respecting active filters
+  closeModal('formTypeModal');
+}
+
+// ── FIELD BUILDER ──────────────────────────────────────
+function addField() {
+  formFields.push({ label:'', key:'', type:'text', required:false });
+  renderFieldList();
+}
+
+function removeField(i) {
+  formFields.splice(i, 1);
+  renderFieldList();
+}
+
+function renderFieldList() {
+  const list = document.getElementById('fieldList');
+  if (!formFields.length) {
+    list.innerHTML = '<div class="fb-empty">No fields added yet. Click "Add Field" to begin.</div>';
+    return;
+  }
+  list.innerHTML = formFields.map((f,i) => `
+    <div class="fb-field">
+      <span class="fb-drag" title="Drag to reorder">&#x2630;</span>
+      <div class="fb-field-label">
+        <input type="text" value="${f.label}" placeholder="Label" oninput="updateField(${i},'label',this.value)">
+      </div>
+      <div class="fb-field-type">
+        <select onchange="updateField(${i},'type',this.value)">
+          ${['text','textarea','select','radio','checkbox','date','file','number','email','phone'].map(t => `<option ${f.type===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fb-field-req">
+        <input type="checkbox" ${f.required?'checked':''} onchange="updateField(${i},'required',this.checked)" id="req${i}">
+        <label for="req${i}">Required</label>
+      </div>
+      <div class="fb-field-del">
+        <button class="btn-icon" onclick="removeField(${i})" title="Remove field">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+function updateField(i, key, val) { formFields[i][key] = val; }
+
+// ── AUTO-SLUG ─────────────────────────────────────────
+function autoSlug() {
+  const name = document.getElementById('ft_name').value;
+  document.getElementById('ft_slug').value = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+function autoDeptSlug() {
+  const name = document.getElementById('dept_name').value;
+  document.getElementById('dept_slug').value = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+// ── DEPARTMENTS TABLE ─────────────────────────────────
+function renderDepts(data) {
+  const body = document.getElementById('deptsBody');
+  body.innerHTML = data.map(d => `
+    <tr>
+      <td><span style="font-weight:600">${d.name}</span></td>
+      <td><span style="font-family:monospace;font-size:11px;color:var(--muted)">${d.slug}</span></td>
+      <td style="font-size:12px">${d.email}</td>
+      <td style="font-size:12px">${d.sla}h default</td>
+      <td style="font-size:12px">${d.signatory}</td>
+      <td><span class="badge ${d.active?'badge-active':'badge-inactive'}">${d.active?'Active':'Inactive'}</span></td>
+      <td>
+        <div class="action-cell">
+          <button class="btn btn-secondary btn-sm" onclick="editDept(${d.id})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmDelete('dept',${d.id},'${d.name}')">Delete</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function openDeptModal() {
+  document.getElementById('deptModalTitle').textContent = 'Add Department';
+  ['dept_name','dept_slug','dept_email','dept_phone','sig_name','sig_title','sig_dept_label','sig_email'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('dept_sla').value = '48';
+  document.getElementById('deptModal').classList.add('open');
+}
+
+function editDept(id) {
+  const d = DEPARTMENTS.find(x => x.id === id);
+  if (!d) return;
+  document.getElementById('deptModalTitle').textContent = 'Edit Department';
+  document.getElementById('dept_name').value = d.name;
+  document.getElementById('dept_slug').value = d.slug;
+  document.getElementById('dept_email').value = d.email;
+  document.getElementById('dept_sla').value = d.sla;
+  document.getElementById('sig_name').value = d.signatory;
+  document.getElementById('deptModal').classList.add('open');
+}
+
+function saveDept() {
+  const name = document.getElementById('dept_name').value.trim();
+  if (!name) { showToast('Department name is required.'); return; }
+  showToast(`Department "${name}" saved successfully.`);
+  closeModal('deptModal');
+}
+
+// ── USERS TABLE ───────────────────────────────────────
+function renderUsers(data) {
+  const body = document.getElementById('usersBody');
+  const roleMap = { student:'badge-student', admin:'badge-admin', super_admin:'badge-superadmin' };
+  const roleLabel = { student:'Student', admin:'Admin', super_admin:'Super Admin' };
+  body.innerHTML = data.map(u => `
+    <tr>
+      <td><span style="font-weight:600">${u.name}</span></td>
+      <td><span style="font-family:monospace;font-size:11px;color:var(--muted)">${u.sid}</span></td>
+      <td style="font-size:12px">${u.email}</td>
+      <td>
+        <select class="filter-sel" style="padding:3px 8px;font-size:11px;" onchange="changeRole(${u.id},this)">
+          <option value="student"    ${u.role==='student'?'selected':''}>Student</option>
+          <option value="admin"      ${u.role==='admin'?'selected':''}>Admin</option>
+          <option value="super_admin"${u.role==='super_admin'?'selected':''}>Super Admin</option>
+        </select>
+      </td>
+      <td style="font-size:12px">${u.dept}</td>
+      <td>
+        <label class="toggle" title="Toggle active"><input type="checkbox" ${u.active?'checked':''} onchange="toggleUserActive(${u.id},this)"><span class="toggle-slider"></span></label>
+      </td>
+      <td>
+        <div class="action-cell">
+          <button class="btn btn-secondary btn-sm" onclick="editUser(${u.id})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmResetPw(${u.id},'${u.name}')">Reset PW</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function filterUsers(q) {
+  const search = typeof q === 'string' ? q.toLowerCase() : (document.querySelector('#pane-users .search-box input')?.value.toLowerCase() || '');
+  const role   = document.getElementById('roleFilter')?.value;
+  const status = document.getElementById('statusFilter')?.value;
+  const filtered = USERS.filter(u =>
+    (!search || u.name.toLowerCase().includes(search) || u.sid.toLowerCase().includes(search) || u.email.toLowerCase().includes(search)) &&
+    (!role   || u.role === role) &&
+    (!status || (status === 'active' ? u.active : !u.active))
+  );
+  renderUsers(filtered);
+}
+
+function changeRole(id, sel) {
+  const u = USERS.find(x => x.id === id);
+  if (u) { u.role = sel.value; showToast(`${u.name}'s role updated to ${sel.value.replace('_',' ')}.`); }
+}
+
+function toggleUserActive(id, cb) {
+  const u = USERS.find(x => x.id === id);
+  if (u) { u.active = cb.checked; showToast(cb.checked ? `${u.name}'s account activated.` : `${u.name}'s account deactivated.`); }
+}
+
+function openUserModal() {
+  document.getElementById('userModalTitle').textContent = 'Add Admin User';
+  ['u_name','u_email','u_phone','u_pass'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('userModal').classList.add('open');
+}
+
+function editUser(id) {
+  const u = USERS.find(x => x.id === id);
+  if (!u) return;
+  document.getElementById('userModalTitle').textContent = `Edit User — ${u.name}`;
+  document.getElementById('u_name').value = u.name;
+  document.getElementById('u_email').value = u.email;
+  document.getElementById('u_role').value = u.role;
+  document.getElementById('userModal').classList.add('open');
+}
+
+function saveUser() {
+  const name = document.getElementById('u_name').value.trim();
+  if (!name) { showToast('Name is required.'); return; }
+  showToast(`User "${name}" created successfully.`);
+  closeModal('userModal');
+}
+
+function confirmResetPw(id, name) {
+  openConfirm(`Reset Password — ${name}`, `This will generate a new temporary password for ${name} and send it to their registered email address.`, () => {
+    showToast(`Password reset email sent to ${name}.`);
+  });
+}
+
+// ── DELETE CONFIRM ────────────────────────────────────
+let confirmCallback = null;
+
+function confirmDelete(type, id, name) {
+  const labels = { form: 'form type', dept: 'department' };
+  openConfirm(
+    `Delete ${labels[type] || type}`,
+    `Are you sure you want to permanently delete "${name}"? This action cannot be undone.`,
+    () => {
+      if (type === 'form') {
+        FORM_TYPES = FORM_TYPES.filter(f => f.id !== id);
+        renderFormTypes(FORM_TYPES);
+      } else if (type === 'dept') {
+        DEPARTMENTS = DEPARTMENTS.filter(d => d.id !== id);
+        renderDepts(DEPARTMENTS);
+      }
+      showToast(`"${name}" deleted.`);
+    }
+  );
+}
+
+function openConfirm(title, msg, cb) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').textContent = msg;
+  confirmCallback = cb;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('open'); confirmCallback = null; }
+document.getElementById('confirmOkBtn').onclick = () => { if (confirmCallback) confirmCallback(); closeConfirm(); };
+
+// ── MODALS ────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); }));
+
+// ── BRANDING ──────────────────────────────────────────
+function previewLogo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('logoPreview');
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.innerHTML = `<img src="${e.target.result}" alt="Logo preview">`;
+    showToast('Logo selected. Click "Save Logo" to apply.');
+  };
+  reader.readAsDataURL(file);
+}
+function saveLogo()   { showToast('Logo saved. It will appear in the portal header and generated PDFs.'); }
+function removeLogo() {
+  document.getElementById('logoPreview').innerHTML = '<div class="logo-placeholder">No logo uploaded</div>';
+  showToast('Logo removed.');
+}
+function pickColor(hex, el) {
+  document.getElementById('colorInput').value = hex;
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────
+
+const NOTIF_EVENTS = [
+  { group: 'Submission Events', key: 'new_submission',      label: 'New submission received',       email: 'digest',   sms: 'never',     inapp: 'immediate' },
+  { group: 'Submission Events', key: 'submission_returned', label: 'Submission returned to student', email: 'immediate',sms: 'never',     inapp: 'immediate' },
+  { group: 'Submission Events', key: 'submission_resubmit', label: 'Student resubmitted a form',     email: 'digest',   sms: 'never',     inapp: 'immediate' },
+  { group: 'Status Changes',    key: 'status_approved',     label: 'Submission approved',            email: 'immediate',sms: 'never',     inapp: 'immediate' },
+  { group: 'Status Changes',    key: 'status_rejected',     label: 'Submission rejected',            email: 'immediate',sms: 'never',     inapp: 'immediate' },
+  { group: 'Status Changes',    key: 'status_in_progress',  label: 'Moved to In Progress',           email: 'never',    sms: 'never',     inapp: 'immediate' },
+  { group: 'SLA & Escalations', key: 'sla_warning',         label: 'SLA warning (< 4 hrs left)',     email: 'immediate',sms: 'immediate', inapp: 'immediate' },
+  { group: 'SLA & Escalations', key: 'sla_breach',          label: 'SLA breached',                   email: 'immediate',sms: 'immediate', inapp: 'immediate' },
+  { group: 'SLA & Escalations', key: 'escalation',          label: 'Escalation triggered',           email: 'immediate',sms: 'immediate', inapp: 'immediate' },
+  { group: 'Admin Activity',    key: 'role_change',         label: 'Admin role changed',             email: 'immediate',sms: 'never',     inapp: 'immediate' },
+  { group: 'Admin Activity',    key: 'new_admin',           label: 'New admin account created',      email: 'immediate',sms: 'never',     inapp: 'immediate' },
+  { group: 'Admin Activity',    key: 'setting_change',      label: 'System setting changed',         email: 'digest',   sms: 'never',     inapp: 'immediate' },
+];
+
+// In-memory store of current preference state
+let NOTIF_STATE = NOTIF_EVENTS.map(e => ({ ...e }));
+
+const DELIVERY_OPTIONS = ['immediate', 'digest_hourly', 'digest_daily', 'never'];
+const DELIVERY_LABELS  = { immediate: 'Immediate', digest_hourly: 'Hourly', digest_daily: 'Daily', never: 'Never' };
+const DELIVERY_CLASS   = { immediate: 'immediate', digest_hourly: 'digest', digest_daily: 'digest', never: 'never' };
+
+function renderNotifMatrix() {
+  const tbody = document.getElementById('notifMatrixBody');
+  if (!tbody) return;
+  let lastGroup = null;
+  let html = '';
+  NOTIF_STATE.forEach((ev, idx) => {
+    if (ev.group !== lastGroup) {
+      html += `<tr class="notif-section-head"><td colspan="4">${ev.group}</td></tr>`;
+      lastGroup = ev.group;
+    }
+    html += `<tr>
+      <td style="padding:10px 12px;font-size:13px">${ev.label}</td>
+      ${['email','sms','inapp'].map(ch => `
+      <td class="ch-cell">
+        <select class="delivery-sel ${DELIVERY_CLASS[ev[ch]]}" data-idx="${idx}" data-ch="${ch}" onchange="updateDelivery(this)">
+          ${DELIVERY_OPTIONS.map(opt => `<option value="${opt}" ${ev[ch]===opt?'selected':''}>${DELIVERY_LABELS[opt]}</option>`).join('')}
+        </select>
+      </td>`).join('')}
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+function updateDelivery(sel) {
+  const idx = +sel.dataset.idx;
+  const ch  = sel.dataset.ch;
+  const val = sel.value;
+  NOTIF_STATE[idx][ch] = val;
+  sel.className = `delivery-sel ${DELIVERY_CLASS[val]}`;
+}
+
+function saveNotifPrefs() {
+  // In production: POST /api/admin/notification-preferences
+  showToast('Notification preferences saved.');
+}
+
+function resetNotifDefaults() {
+  NOTIF_STATE = NOTIF_EVENTS.map(e => ({ ...e }));
+  renderNotifMatrix();
+  showToast('Preferences reset to defaults.');
+}
+
+function toggleQuietHours() {
+  const enabled = document.getElementById('quiet_enabled').checked;
+  document.getElementById('quietHoursFields').style.display = enabled ? 'flex' : 'none';
+}
+
+// ── TOAST ─────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ── INIT ──────────────────────────────────────────────
+renderFormTypes(FORM_TYPES);
+renderDepts(DEPARTMENTS);
+renderUsers(USERS);
+</script>
+</body>
+</html>

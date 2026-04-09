@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         stopOnFailure="false"
+>
+    <testsuites>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+
+    <php>
+        <!-- Keep APP_ENV=testing so Laravel loads config/testing overrides -->
+        <env name="APP_ENV"          value="testing"/>
+
+        <!-- Separate test database — create with:
+             docker compose exec postgres psql -U sh_user -c "CREATE DATABASE studentshuib_test;"
+             docker compose exec php php artisan migrate --env=testing
+        -->
+        <env name="DB_DATABASE"      value="studentshuib_test"/>
+
+        <!-- Speed up bcrypt in tests (no need for high cost factor) -->
+        <env name="BCRYPT_ROUNDS"    value="4"/>
+
+        <!-- Use in-memory / array drivers so tests don't share state -->
+        <env name="CACHE_STORE"      value="array"/>
+        <env name="SESSION_DRIVER"   value="array"/>
+
+        <!-- Run queued jobs synchronously — no Redis needed for tests -->
+        <env name="QUEUE_CONNECTION" value="sync"/>
+
+        <!-- Capture sent emails in memory — assert with Mail::assertSent() -->
+        <env name="MAIL_MAILER"      value="array"/>
+
+        <!-- Use local filesystem for file uploads in tests -->
+        <env name="FILESYSTEM_DISK"  value="local"/>
+    </php>
+</phpunit>

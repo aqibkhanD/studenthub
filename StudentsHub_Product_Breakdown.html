@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudentsHub — Product Breakdown & Deployment Assessment</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f0f2f5; color: #1a1a2e; font-size: 14px; }
+
+  .page-header {
+    background: linear-gradient(135deg, #0a1628 0%, #1e3a5f 50%, #0a1628 100%);
+    color: white; padding: 40px 48px; position: relative; overflow: hidden;
+  }
+  .page-header::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .page-header h1 { font-size: 28px; font-weight: 700; letter-spacing: 0.5px; }
+  .page-header .subtitle { font-size: 14px; color: #94b4d4; margin-top: 6px; }
+  .page-header .badge {
+    display: inline-block; background: #1abc9c; color: white;
+    padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+    margin-top: 12px; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+
+  .nav { background: #1e3a5f; display: flex; padding: 0 48px; overflow-x: auto; }
+  .nav a {
+    color: #94b4d4; text-decoration: none; padding: 12px 16px; font-size: 13px;
+    white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s;
+  }
+  .nav a:hover { color: white; border-bottom-color: #1abc9c; }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
+
+  .section-title {
+    font-size: 18px; font-weight: 700; color: #1e3a5f;
+    border-left: 4px solid #1abc9c; padding-left: 12px; margin-bottom: 20px;
+  }
+  .section-desc { color: #555; font-size: 13px; margin-bottom: 20px; line-height: 1.6; }
+
+  /* Architecture Diagram */
+  .arch-diagram {
+    background: white; border-radius: 12px; padding: 32px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 32px;
+  }
+  .arch-layers { display: flex; flex-direction: column; gap: 10px; }
+  .arch-layer {
+    border-radius: 8px; padding: 14px 20px; display: flex; align-items: center; gap: 16px;
+  }
+  .arch-layer .layer-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    min-width: 120px; color: white; opacity: 0.85;
+  }
+  .arch-layer .layer-items {
+    display: flex; flex-wrap: wrap; gap: 8px; flex: 1;
+  }
+  .arch-layer .item {
+    background: rgba(255,255,255,0.2); color: white;
+    padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500;
+  }
+  .layer-ui     { background: #2980b9; }
+  .layer-ai     { background: #8e44ad; }
+  .layer-api    { background: #27ae60; }
+  .layer-db     { background: #e67e22; }
+  .layer-infra  { background: #e74c3c; }
+
+  .arch-arrow {
+    text-align: center; color: #aaa; font-size: 18px; margin: 2px 0;
+    line-height: 1;
+  }
+
+  /* User Role Cards */
+  .roles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 32px; }
+  .role-card {
+    background: white; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .role-card .role-header {
+    padding: 16px 20px; display: flex; align-items: center; gap: 12px; color: white;
+  }
+  .role-card .role-icon { font-size: 20px; }
+  .role-card .role-name { font-size: 15px; font-weight: 700; }
+  .role-card .role-count { font-size: 11px; opacity: 0.8; }
+  .role-card .role-body { padding: 16px 20px; }
+  .role-card ul { list-style: none; padding: 0; }
+  .role-card ul li {
+    padding: 5px 0; font-size: 13px; color: #444; border-bottom: 1px solid #f5f5f5;
+    padding-left: 16px; position: relative;
+  }
+  .role-card ul li::before { content: ''; position: absolute; left: 4px; top: 13px; width: 5px; height: 5px; border-radius: 50%; background: #1abc9c; }
+  .role-card ul li:last-child { border-bottom: none; }
+
+  .role-student .role-header  { background: linear-gradient(135deg, #2980b9, #1abc9c); }
+  .role-dept    .role-header  { background: linear-gradient(135deg, #8e44ad, #2980b9); }
+  .role-super   .role-header  { background: linear-gradient(135deg, #c0392b, #e67e22); }
+  .role-mgmt    .role-header  { background: linear-gradient(135deg, #1e3a5f, #2980b9); }
+
+  /* Module Grid */
+  .modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .module-card {
+    background: white; border-radius: 10px; padding: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07); border-top: 3px solid transparent;
+  }
+  .module-card.m1 { border-top-color: #2980b9; }
+  .module-card.m2 { border-top-color: #27ae60; }
+  .module-card.m3 { border-top-color: #8e44ad; }
+  .module-card.m4 { border-top-color: #e67e22; }
+  .module-card.m5 { border-top-color: #e74c3c; }
+  .module-card.m6 { border-top-color: #1abc9c; }
+  .module-card.m7 { border-top-color: #f39c12; }
+  .module-card.m8 { border-top-color: #3498db; }
+  .module-card.m9 { border-top-color: #9b59b6; }
+  .module-card.m10 { border-top-color: #16a085; }
+  .module-card.m11 { border-top-color: #d35400; }
+
+  .module-card .mod-title { font-size: 13px; font-weight: 700; color: #1e3a5f; margin-bottom: 10px; }
+  .module-card ul { list-style: none; padding: 0; }
+  .module-card ul li { font-size: 12px; color: #555; padding: 3px 0 3px 14px; position: relative; }
+  .module-card ul li::before { content: '›'; position: absolute; left: 2px; color: #999; }
+
+  /* AI Agents */
+  .agents-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 32px; }
+  .agent-card {
+    background: white; border-radius: 10px; padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07); text-align: center;
+  }
+  .agent-card .agent-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin: 0 auto 10px;
+  }
+  .agent-card .agent-name { font-size: 13px; font-weight: 700; color: #1e3a5f; margin-bottom: 6px; }
+  .agent-card .agent-desc { font-size: 11px; color: #777; line-height: 1.5; }
+
+  /* Workflow */
+  .workflow {
+    background: white; border-radius: 12px; padding: 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 32px;
+  }
+  .workflow-steps { display: flex; align-items: flex-start; gap: 0; flex-wrap: wrap; }
+  .workflow-step { flex: 1; min-width: 130px; text-align: center; position: relative; }
+  .workflow-step:not(:last-child)::after {
+    content: ''; position: absolute; top: 20px; right: -20px;
+    width: 40px; height: 2px; background: #ddd; z-index: 1;
+  }
+  .workflow-step .step-circle {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: white;
+    margin: 0 auto 8px; position: relative; z-index: 2;
+  }
+  .workflow-step .step-label { font-size: 12px; font-weight: 600; color: #333; }
+  .workflow-step .step-sub { font-size: 11px; color: #888; margin-top: 3px; }
+  .s1 .step-circle { background: #2980b9; }
+  .s2 .step-circle { background: #27ae60; }
+  .s3 .step-circle { background: #f39c12; }
+  .s4 .step-circle { background: #8e44ad; }
+  .s5 .step-circle { background: #1abc9c; }
+  .s6 .step-circle { background: #e74c3c; }
+  .s7 .step-circle { background: #16a085; }
+
+  /* Deployment */
+  .deploy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 32px; }
+  .deploy-card {
+    background: white; border-radius: 10px; padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .deploy-card .d-title { font-size: 14px; font-weight: 700; color: #1e3a5f; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .deploy-card .d-title span { font-size: 16px; }
+  .deploy-card ul { list-style: none; padding: 0; }
+  .deploy-card ul li { font-size: 12.5px; color: #444; padding: 4px 0; border-bottom: 1px solid #f5f5f5; }
+  .deploy-card ul li:last-child { border-bottom: none; }
+  .deploy-card ul li strong { color: #1e3a5f; }
+
+  /* Cost table */
+  .cost-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .cost-table th { background: #1e3a5f; color: white; padding: 10px 14px; text-align: left; }
+  .cost-table td { padding: 9px 14px; border-bottom: 1px solid #eee; }
+  .cost-table tr:last-child td { border-bottom: none; }
+  .cost-table tr:hover td { background: #f7f9fb; }
+  .cost-table .highlight { background: #e8f5e9; font-weight: 600; }
+  .cost-table .rec { color: #27ae60; font-weight: 600; font-size: 11px; text-transform: uppercase; }
+
+  /* Status badges */
+  .status-ok    { background: #e8f5e9; color: #27ae60; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .status-warn  { background: #fff8e1; color: #f39c12; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .status-req   { background: #fce4ec; color: #e74c3c; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+
+  /* Phase table */
+  .phase-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 32px; }
+  .phase-table th { background: #1e3a5f; color: white; padding: 10px 14px; text-align: left; }
+  .phase-table td { padding: 9px 14px; border-bottom: 1px solid #eee; vertical-align: top; }
+  .phase-table tr:nth-child(even) td { background: #fafafa; }
+  .phase-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+  }
+  .ph1 { background: #e3f2fd; color: #1565c0; }
+  .ph2 { background: #e8f5e9; color: #2e7d32; }
+  .ph3 { background: #f3e5f5; color: #6a1b9a; }
+  .ph4 { background: #fff8e1; color: #e65100; }
+  .ph5 { background: #fce4ec; color: #880e4f; }
+  .ph6 { background: #e0f2f1; color: #00695c; }
+
+  .card { background: white; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 28px; }
+
+  .section { margin-bottom: 40px; }
+
+  .green-box {
+    background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 16px 20px;
+    font-size: 13px; color: #2e7d32; margin-bottom: 20px; line-height: 1.7;
+  }
+  .green-box strong { color: #1b5e20; }
+
+  .warn-box {
+    background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 16px 20px;
+    font-size: 13px; color: #856404; margin-bottom: 20px; line-height: 1.7;
+  }
+
+  /* intent types */
+  .intents-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+  .intent-chip {
+    padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .ic1 { background: #e3f2fd; color: #1565c0; }
+  .ic2 { background: #e8f5e9; color: #2e7d32; }
+  .ic3 { background: #f3e5f5; color: #6a1b9a; }
+  .ic4 { background: #fce4ec; color: #880e4f; }
+  .ic5 { background: #fff8e1; color: #e65100; }
+  .ic6 { background: #e0f2f1; color: #00695c; }
+  .ic7 { background: #ede7f6; color: #4527a0; }
+
+  @media (max-width: 768px) {
+    .page-header { padding: 24px 20px; }
+    .container { padding: 20px 16px; }
+    .workflow-step:not(:last-child)::after { display: none; }
+  }
+
+  .print-footer {
+    text-align: center; color: #aaa; font-size: 11px;
+    padding: 20px; border-top: 1px solid #e0e0e0; margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>StudentsHub — Agentic AI University Operating System</h1>
+  <div class="subtitle">Daffodil International University (DIU) — Product Breakdown & Deployment Assessment</div>
+  <div class="badge">Option C: Laravel + Python FastAPI + Vue/React</div>
+</div>
+
+<div class="nav">
+  <a href="#architecture">Architecture</a>
+  <a href="#user-roles">User Roles</a>
+  <a href="#modules">Modules</a>
+  <a href="#workflow">Workflow</a>
+  <a href="#ai-agents">AI Agents</a>
+  <a href="#intent">Intent Engine</a>
+  <a href="#phases">Phases</a>
+  <a href="#deployment">Deployment</a>
+</div>
+
+<div class="container">
+
+  <!-- ARCHITECTURE -->
+  <div class="section" id="architecture">
+    <div class="section-title">System Architecture Overview</div>
+    <div class="section-desc">StudentsHub is a 5-layer system. Students and staff interact via a browser or mobile app (Vue/React). Every request flows through the Laravel API, optionally through the Python FastAPI AI layer, and persists in PostgreSQL. Redis handles queues and caching. All services are containerised with Docker Compose.</div>
+    <div class="arch-diagram">
+      <div class="arch-layers">
+        <div class="arch-layer layer-ui">
+          <div class="layer-label">Frontend UI</div>
+          <div class="layer-items">
+            <span class="item">Vue.js / Next.js SPA</span>
+            <span class="item">Student Portal</span>
+            <span class="item">Admin Dashboard</span>
+            <span class="item">AI Chat Interface</span>
+            <span class="item">Mobile Responsive</span>
+          </div>
+        </div>
+        <div class="arch-arrow">&#8595;</div>
+        <div class="arch-layer layer-ai">
+          <div class="layer-label">AI Layer (FastAPI)</div>
+          <div class="layer-items">
+            <span class="item">Intent Classification</span>
+            <span class="item">RAG (pgvector)</span>
+            <span class="item">Policy Reasoning</span>
+            <span class="item">Form Pre-fill</span>
+            <span class="item">Learning Loop</span>
+            <span class="item">12 Specialised Agents</span>
+          </div>
+        </div>
+        <div class="arch-arrow">&#8595;</div>
+        <div class="arch-layer layer-api">
+          <div class="layer-label">API Layer (Laravel)</div>
+          <div class="layer-items">
+            <span class="item">Auth / JWT / RBAC</span>
+            <span class="item">Form Submission</span>
+            <span class="item">Workflow Engine</span>
+            <span class="item">SLA Monitor</span>
+            <span class="item">Notifications (SMS + In-app)</span>
+            <span class="item">File Uploads</span>
+            <span class="item">Audit Log</span>
+            <span class="item">Service Catalogue</span>
+          </div>
+        </div>
+        <div class="arch-arrow">&#8595;</div>
+        <div class="arch-layer layer-db">
+          <div class="layer-label">Data Layer</div>
+          <div class="layer-items">
+            <span class="item">PostgreSQL + pgvector</span>
+            <span class="item">Redis (Queue / Cache)</span>
+            <span class="item">File Storage (S3 / local)</span>
+            <span class="item">Audit Tables</span>
+          </div>
+        </div>
+        <div class="arch-arrow">&#8595;</div>
+        <div class="arch-layer layer-infra">
+          <div class="layer-label">Infrastructure</div>
+          <div class="layer-items">
+            <span class="item">Docker Compose</span>
+            <span class="item">Nginx Reverse Proxy</span>
+            <span class="item">SSL / HTTPS</span>
+            <span class="item">SMS Gateway (SSL Wireless)</span>
+            <span class="item">OpenAI / Anthropic API</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER ROLES -->
+  <div class="section" id="user-roles">
+    <div class="section-title">What Each User Type Can Do</div>
+    <div class="roles-grid">
+
+      <div class="role-card role-student">
+        <div class="role-header">
+          <div class="role-icon">&#128100;</div>
+          <div>
+            <div class="role-name">Student</div>
+            <div class="role-count">~50,000+ users</div>
+          </div>
+        </div>
+        <div class="role-body">
+          <ul>
+            <li>Submit any service request (20+ form types)</li>
+            <li>Track request status in real time</li>
+            <li>Chat with AI Concierge for guidance</li>
+            <li>Receive SMS + in-app notifications</li>
+            <li>Upload supporting documents</li>
+            <li>Submit anonymous complaints</li>
+            <li>Request career counselling</li>
+            <li>Register for events and clubs</li>
+            <li>Request international student support</li>
+            <li>View 360-degree own profile</li>
+            <li>Download completed certificates / letters</li>
+            <li>Re-submit if form returned for changes</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="role-card role-dept">
+        <div class="role-header">
+          <div class="role-icon">&#128203;</div>
+          <div>
+            <div class="role-name">Department Admin</div>
+            <div class="role-count">Staff per department</div>
+          </div>
+        </div>
+        <div class="role-body">
+          <ul>
+            <li>View all submissions assigned to their dept</li>
+            <li>Approve, reject, or return requests</li>
+            <li>Add internal comments and notes</li>
+            <li>Change submission status</li>
+            <li>Request additional documents</li>
+            <li>View SLA timers and breach alerts</li>
+            <li>Bulk process multiple submissions</li>
+            <li>Generate reports for their dept</li>
+            <li>Manage form type settings (dept scope)</li>
+            <li>Access AI-generated request summaries</li>
+            <li>View audit history per submission</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="role-card role-super">
+        <div class="role-header">
+          <div class="role-icon">&#9881;</div>
+          <div>
+            <div class="role-name">Super Admin</div>
+            <div class="role-count">IT / System team</div>
+          </div>
+        </div>
+        <div class="role-body">
+          <ul>
+            <li>Manage all departments and users</li>
+            <li>Create/edit/disable form types</li>
+            <li>Configure service catalogue and SLAs</li>
+            <li>Set up routing rules per form type</li>
+            <li>Define approval chains (multi-level)</li>
+            <li>Manage AI knowledge base content</li>
+            <li>View system-wide analytics dashboard</li>
+            <li>Export full audit logs</li>
+            <li>Configure SMS gateway settings</li>
+            <li>Manage RBAC roles and permissions</li>
+            <li>Trigger manual SLA escalations</li>
+            <li>View all submissions across all depts</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="role-card role-mgmt">
+        <div class="role-header">
+          <div class="role-icon">&#128202;</div>
+          <div>
+            <div class="role-name">Management / VC Office</div>
+            <div class="role-count">Leadership team</div>
+          </div>
+        </div>
+        <div class="role-body">
+          <ul>
+            <li>View executive KPI dashboard</li>
+            <li>Track system-wide SLA compliance</li>
+            <li>Review escalated / overdue cases</li>
+            <li>See department performance metrics</li>
+            <li>Access AI-generated trend reports</li>
+            <li>View student satisfaction analytics</li>
+            <li>Monitor anonymous complaint volume</li>
+            <li>Track AI resolution rate vs human</li>
+            <li>Generate board-ready reports</li>
+            <li>View career outcome metrics</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODULES -->
+  <div class="section" id="modules">
+    <div class="section-title">11 Core Modules — What the System Does</div>
+    <div class="modules-grid">
+
+      <div class="module-card m1">
+        <div class="mod-title">1. Student Portal & Authentication</div>
+        <ul>
+          <li>Student / Staff / Admin login with RBAC</li>
+          <li>22-role permission model</li>
+          <li>JWT + Laravel Sanctum token auth</li>
+          <li>Student 360 profile view</li>
+          <li>Notification preferences</li>
+          <li>Password reset, session management</li>
+        </ul>
+      </div>
+
+      <div class="module-card m2">
+        <div class="mod-title">2. Service Request & Form Submission</div>
+        <ul>
+          <li>20+ form types across 5 categories</li>
+          <li>Academic &amp; Certification (bonafide, transcript, migration)</li>
+          <li>Complaints (including anonymous)</li>
+          <li>Career counselling requests</li>
+          <li>Club / co-curricular applications</li>
+          <li>International student services</li>
+          <li>File / document uploads</li>
+          <li>Draft save before submission</li>
+          <li>AI-assisted form pre-fill</li>
+        </ul>
+      </div>
+
+      <div class="module-card m3">
+        <div class="mod-title">3. Workflow Engine</div>
+        <ul>
+          <li>Configurable state machine per service type</li>
+          <li>States: Draft → Submitted → Under Review → Done / Rejected</li>
+          <li>Multi-level sequential / parallel approval chains</li>
+          <li>Auto-routing to correct department</li>
+          <li>Return-for-info flow with student re-submission</li>
+          <li>Full status history per submission</li>
+        </ul>
+      </div>
+
+      <div class="module-card m4">
+        <div class="mod-title">4. SLA Engine</div>
+        <ul>
+          <li>Per-service SLA configuration (in hours)</li>
+          <li>Active scheduler checks every 15 minutes</li>
+          <li>Colour-coded urgency alerts (green / amber / red)</li>
+          <li>Automatic escalation on SLA breach</li>
+          <li>SLA pause when waiting for student info</li>
+          <li>SLA compliance reports per department</li>
+        </ul>
+      </div>
+
+      <div class="module-card m5">
+        <div class="mod-title">5. Notification System</div>
+        <ul>
+          <li>In-app notifications (real-time)</li>
+          <li>SMS via SSL Wireless Bangladesh gateway</li>
+          <li>Notification on submission, status change, SLA breach</li>
+          <li>Admin alerts for pending reviews</li>
+          <li>Configurable notification templates</li>
+          <li>Notification log / history per user</li>
+        </ul>
+      </div>
+
+      <div class="module-card m6">
+        <div class="mod-title">6. Admin Dashboard</div>
+        <ul>
+          <li>Inbox view: filter by dept / status / date / form type</li>
+          <li>Bulk status updates</li>
+          <li>Internal comment threads per submission</li>
+          <li>Document preview and download</li>
+          <li>One-click approve / reject / return</li>
+          <li>SLA countdown per item</li>
+          <li>AI-generated submission summary</li>
+        </ul>
+      </div>
+
+      <div class="module-card m7">
+        <div class="mod-title">7. AI Assistant (Chat + Intent)</div>
+        <ul>
+          <li>Natural language Q&amp;A on university policies</li>
+          <li>7 intent types classified automatically</li>
+          <li>RAG against knowledge base (pgvector)</li>
+          <li>Guided form completion support</li>
+          <li>Eligibility pre-check before submission</li>
+          <li>Handoff to human when needed</li>
+          <li>Context-aware across session</li>
+        </ul>
+      </div>
+
+      <div class="module-card m8">
+        <div class="mod-title">8. Knowledge Base & RAG</div>
+        <ul>
+          <li>Upload university policy PDFs / docs</li>
+          <li>Automatic chunking (400 words, overlap)</li>
+          <li>Embedding via OpenAI / Anthropic</li>
+          <li>pgvector cosine similarity search</li>
+          <li>Human review promotion workflow</li>
+          <li>AI learning loop from resolved requests</li>
+        </ul>
+      </div>
+
+      <div class="module-card m9">
+        <div class="mod-title">9. Analytics & Reporting</div>
+        <ul>
+          <li>Submission volume over time</li>
+          <li>Average resolution time by dept</li>
+          <li>SLA compliance rate</li>
+          <li>Top request types / peak periods</li>
+          <li>AI resolution rate vs human</li>
+          <li>Department workload heatmaps</li>
+          <li>Exportable CSV / PDF reports</li>
+        </ul>
+      </div>
+
+      <div class="module-card m10">
+        <div class="mod-title">10. Audit Log</div>
+        <ul>
+          <li>Timestamped record of every action</li>
+          <li>Who changed what, when</li>
+          <li>Status transition history per submission</li>
+          <li>Admin comment log</li>
+          <li>Login / logout events</li>
+          <li>Tamper-evident, append-only log</li>
+        </ul>
+      </div>
+
+      <div class="module-card m11">
+        <div class="mod-title">11. Settings & Configuration</div>
+        <ul>
+          <li>Service catalogue management</li>
+          <li>Form type builder (fields, SLA, routing)</li>
+          <li>Department and user management</li>
+          <li>Approval chain designer</li>
+          <li>SMS / notification template editor</li>
+          <li>AI knowledge base management</li>
+          <li>Role and permission manager</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WORKFLOW -->
+  <div class="section" id="workflow">
+    <div class="section-title">Request Lifecycle — From Submission to Resolution</div>
+    <div class="workflow">
+      <div class="workflow-steps">
+        <div class="workflow-step s1">
+          <div class="step-circle">1</div>
+          <div class="step-label">Student Submits</div>
+          <div class="step-sub">Form + Documents</div>
+        </div>
+        <div class="workflow-step s2">
+          <div class="step-circle">2</div>
+          <div class="step-label">AI Pre-checks</div>
+          <div class="step-sub">Eligibility + Routing</div>
+        </div>
+        <div class="workflow-step s3">
+          <div class="step-circle">3</div>
+          <div class="step-label">Dept Queued</div>
+          <div class="step-sub">SLA Timer Starts</div>
+        </div>
+        <div class="workflow-step s4">
+          <div class="step-circle">4</div>
+          <div class="step-label">Admin Reviews</div>
+          <div class="step-sub">Comment + Decision</div>
+        </div>
+        <div class="workflow-step s5">
+          <div class="step-circle">5</div>
+          <div class="step-label">Approved / Rejected</div>
+          <div class="step-sub">Multi-level if needed</div>
+        </div>
+        <div class="workflow-step s6">
+          <div class="step-circle">6</div>
+          <div class="step-label">Student Notified</div>
+          <div class="step-sub">SMS + In-app</div>
+        </div>
+        <div class="workflow-step s7">
+          <div class="step-circle">7</div>
+          <div class="step-label">AI Learns</div>
+          <div class="step-sub">Resolution Logged</div>
+        </div>
+      </div>
+      <div style="margin-top:20px; padding:12px; background:#f8f9fa; border-radius:8px; font-size:12px; color:#555; line-height:1.7;">
+        <strong>Branch at Step 4:</strong> Admin can also <em>Return for Info</em> — student is notified, SLA pauses, student re-submits, SLA resumes. If SLA breaches, automatic escalation triggers at Step 3/4.
+        Sensitive complaints skip AI pre-checks and route directly to restricted-visibility queue.
+      </div>
+    </div>
+  </div>
+
+  <!-- AI AGENTS -->
+  <div class="section" id="ai-agents">
+    <div class="section-title">12 AI Agents — What Each One Does</div>
+    <div class="agents-grid">
+
+      <div class="agent-card">
+        <div class="agent-icon" style="background:#e3f2fd;">&#129302;</div>
+        <div class="agent-name">Student Concierge</div>
+        <div class="agent-desc">Primary entry point. Understands natural language, greets students, routes to right agent or service.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-icon" style="background:#e8f5e9;">&#128218;</div>
+        <div class="agent-name">Policy Intelligence</div>
+        <div class="agent-desc">Answers policy questions using RAG over the university knowledge base. Cites source documents.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-icon" style="background:#f3e5f5;">&#128196;</div>
+        <div class="agent-name">Transaction Agent</div>
+        <div class="agent-desc">Handles form submissions end-to-end: pre-fill, validation, submission, status updates.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-icon" style="background:#fff8e1;">&#128270;</div>
+        <div class="agent-name">Routing Agent</div>
+        <div class="agent-desc">Classifies intent, determines correct department, assigns priority, applies routing rules.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-icon" style="background:#fce4ec;">&#9989;</div>
+        <div class="agent-name">Approval Agent</div>
+        <div class="agent-desc">Manages multi-level approval chains, sends reminders, escalates on SLA breach.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-icon" style="background:#e0f2f1;">&#127979;</div>
+        <div class="agent-name">Academic Agent</div>
+        <div class="agent-desc">Handles academic requests: transcripts, bonafide letters, exam queries, graduation clearance.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-icon" style="background:#ede7f6;">&#127758;</div>
+        <div class="agent-name">International Agent</div>
+        <div class="agent-desc">Supports foreign students with visa letters, NOCs, country-specific document requirements.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-icon" style="background:#e8eaf6;">&#128188;</div>
+        <div class="agent-name">Career Agent</div>
+        <div class="agent-desc">Books career counselling, suggests workshops, connects with alumni network, tracks career goals.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-icon" style="background:#e1f5fe;">&#127881;</div>
+        <div class="agent-name">Event & Engagement</div>
+        <div class="agent-desc">Club registrations, event sign-ups, new club applications, committee approvals, co-curricular tracking.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-icon" style="background:#fbe9e7;">&#128106;</div>
+        <div class="agent-name">Welfare & Protection</div>
+        <div class="agent-desc">Handles sensitive complaints, wellbeing concerns. Anonymous submission support, restricted visibility.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-icon" style="background:#f1f8e9;">&#128200;</div>
+        <div class="agent-name">Analytics Agent</div>
+        <div class="agent-desc">Generates natural language summaries of trends, SLA compliance, department performance on request.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-icon" style="background:#fff3e0;">&#129504;</div>
+        <div class="agent-name">Learning Agent</div>
+        <div class="agent-desc">Captures resolutions for knowledge base, identifies FAQ candidates, promotes entries after human review.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- INTENT TYPES -->
+  <div class="section" id="intent">
+    <div class="section-title">7 Intent Types — How the AI Classifies Every Message</div>
+    <div class="card">
+      <p class="section-desc">Every student message is classified into one of these intents before routing to the correct agent or action path.</p>
+      <div class="intents-grid">
+        <span class="intent-chip ic1">Information Request — "What are the graduation requirements?"</span>
+        <span class="intent-chip ic2">Transaction — "I need to apply for a bonafide certificate"</span>
+        <span class="intent-chip ic3">Status Check — "Where is my transcript request?"</span>
+        <span class="intent-chip ic4">Escalation — "My request has been pending for 2 weeks"</span>
+        <span class="intent-chip ic5">Sensitive — "I want to report a harassment incident"</span>
+        <span class="intent-chip ic6">Opportunity — "What scholarships am I eligible for?"</span>
+        <span class="intent-chip ic7">Governance — "I want to propose a new student club"</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASES -->
+  <div class="section" id="phases">
+    <div class="section-title">6-Phase Build Roadmap</div>
+    <table class="phase-table">
+      <thead>
+        <tr>
+          <th>Phase</th>
+          <th>Name</th>
+          <th>Duration</th>
+          <th>Key Deliverables</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="phase-badge ph1">Phase 1</span></td>
+          <td><strong>Foundation</strong></td>
+          <td>Weeks 1-4</td>
+          <td>Auth, RBAC, student profile, DB schema, base Laravel API, Docker setup</td>
+          <td>Secure login + user management working</td>
+        </tr>
+        <tr>
+          <td><span class="phase-badge ph2">Phase 2</span></td>
+          <td><strong>Form Engine</strong></td>
+          <td>Weeks 5-9</td>
+          <td>Service catalogue, 20+ form types, file upload, submission workflow, admin dashboard v1</td>
+          <td>Students can submit forms; admins can review</td>
+        </tr>
+        <tr>
+          <td><span class="phase-badge ph3">Phase 3</span></td>
+          <td><strong>Operations</strong></td>
+          <td>Weeks 10-13</td>
+          <td>SLA engine, notifications (SMS + in-app), audit log, multi-level approvals, reporting v1</td>
+          <td>90-day beta-ready — 5-6 departments live</td>
+        </tr>
+        <tr>
+          <td><span class="phase-badge ph4">Phase 4</span></td>
+          <td><strong>AI Foundation</strong></td>
+          <td>Weeks 14-19</td>
+          <td>FastAPI service, intent classification, RAG pipeline, pgvector, Policy Intelligence agent, Concierge v1</td>
+          <td>AI answers policy questions; reduces admin queries</td>
+        </tr>
+        <tr>
+          <td><span class="phase-badge ph5">Phase 5</span></td>
+          <td><strong>Agentic AI</strong></td>
+          <td>Weeks 20-27</td>
+          <td>All 12 agents, form pre-fill, eligibility checks, anonymous complaints, career + international agents</td>
+          <td>Full AI-assisted student experience</td>
+        </tr>
+        <tr>
+          <td><span class="phase-badge ph6">Phase 6</span></td>
+          <td><strong>Intelligence</strong></td>
+          <td>Weeks 28-36</td>
+          <td>AI learning loop, predictive analytics, executive dashboards, multi-language (Bangla), performance tuning</td>
+          <td>Self-improving system; 99.9% uptime target</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- DEPLOYMENT -->
+  <div class="section" id="deployment">
+    <div class="section-title">Deployment Assessment — Can This Be Deployed?</div>
+
+    <div class="green-box">
+      <strong>Yes — fully deployable.</strong> The Option C stack (Laravel + FastAPI + PostgreSQL + pgvector + Vue/React + Redis + Docker Compose) runs on any standard Linux VPS or cloud provider. Minimum viable deployment can be live in under 4 hours with Docker Compose. All components are open-source or have free tiers available.
+    </div>
+
+    <div class="deploy-grid">
+
+      <div class="deploy-card">
+        <div class="d-title"><span>&#128230;</span> Stack Components</div>
+        <ul>
+          <li><strong>Laravel 11 (PHP 8.3)</strong> — <span class="status-ok">Ready</span></li>
+          <li><strong>Python 3.11 + FastAPI</strong> — <span class="status-ok">Ready</span></li>
+          <li><strong>PostgreSQL 16 + pgvector</strong> — <span class="status-ok">Ready</span></li>
+          <li><strong>Redis 7</strong> — <span class="status-ok">Ready</span></li>
+          <li><strong>Vue.js / Next.js</strong> — <span class="status-ok">Ready</span></li>
+          <li><strong>Nginx (reverse proxy)</strong> — <span class="status-ok">Ready</span></li>
+          <li><strong>Docker Compose v2</strong> — <span class="status-ok">Ready</span></li>
+          <li><strong>SSL Wireless SMS API</strong> — <span class="status-warn">Need account</span></li>
+          <li><strong>OpenAI / Anthropic API</strong> — <span class="status-warn">Need API key</span></li>
+        </ul>
+      </div>
+
+      <div class="deploy-card">
+        <div class="d-title"><span>&#128187;</span> Minimum Server Requirements</div>
+        <ul>
+          <li><strong>CPU:</strong> 4 vCPUs (2 minimum for dev)</li>
+          <li><strong>RAM:</strong> 8 GB (4 GB minimum for dev)</li>
+          <li><strong>Storage:</strong> 80 GB SSD (uploads + DB)</li>
+          <li><strong>OS:</strong> Ubuntu 22.04 LTS</li>
+          <li><strong>Network:</strong> 100 Mbps, static IP</li>
+          <li><strong>Bandwidth:</strong> 2 TB/month (50k users)</li>
+          <li><strong>Database:</strong> PostgreSQL must have pgvector extension enabled</li>
+          <li><strong>Ports needed:</strong> 80, 443 (Nginx), 22 (SSH)</li>
+        </ul>
+      </div>
+
+      <div class="deploy-card">
+        <div class="d-title"><span>&#128640;</span> First Deployment Steps</div>
+        <ul>
+          <li>1. Provision VPS / server</li>
+          <li>2. Install Docker + Docker Compose</li>
+          <li>3. Clone repository, configure .env</li>
+          <li>4. Run <code>docker compose up -d</code></li>
+          <li>5. Run Laravel migrations + seed</li>
+          <li>6. Configure Nginx with SSL (Let's Encrypt)</li>
+          <li>7. Point domain DNS to server IP</li>
+          <li>8. Test SMS gateway connectivity</li>
+          <li>9. Upload initial knowledge base documents</li>
+          <li>10. Create super-admin account</li>
+        </ul>
+      </div>
+
+      <div class="deploy-card">
+        <div class="d-title"><span>&#9888;</span> Phase 1-3 Requirements (Beta)</div>
+        <ul>
+          <li>No AI API key needed until Phase 4</li>
+          <li>No pgvector needed until Phase 4</li>
+          <li>Redis optional until Phase 3 (queue jobs)</li>
+          <li>SMS gateway needed from Phase 3</li>
+          <li>4 GB RAM sufficient for Phase 1-3</li>
+          <li>Single VPS handles Phase 1-3 comfortably</li>
+          <li><strong>Cost for beta: ~$20-25/month</strong></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="section-title" style="margin-bottom:16px;">Cloud Provider Cost Comparison (Production)</div>
+    <div class="card">
+      <table class="cost-table">
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Plan</th>
+            <th>Specs</th>
+            <th>Est. Monthly Cost</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="highlight">
+            <td>Hetzner Cloud</td>
+            <td>CX32 + CPX21</td>
+            <td>4 vCPU, 8 GB RAM, 160 GB</td>
+            <td><strong>~$20-30 USD</strong></td>
+            <td><span class="rec">Recommended — best value</span></td>
+          </tr>
+          <tr>
+            <td>DigitalOcean</td>
+            <td>General 4GB → 8GB</td>
+            <td>4 vCPU, 8 GB RAM, 160 GB</td>
+            <td><strong>~$48-96 USD</strong></td>
+            <td>Easy interface, good docs</td>
+          </tr>
+          <tr>
+            <td>AWS</td>
+            <td>t3.medium + RDS</td>
+            <td>2 vCPU, 4 GB + managed DB</td>
+            <td><strong>~$60-120 USD</strong></td>
+            <td>Best long-term scale, more complex</td>
+          </tr>
+          <tr>
+            <td>Azure</td>
+            <td>B2s + Azure DB</td>
+            <td>2 vCPU, 4 GB + managed DB</td>
+            <td><strong>~$70-130 USD</strong></td>
+            <td>Academic licensing possible for DIU</td>
+          </tr>
+          <tr>
+            <td>Local Server (DIU)</td>
+            <td>On-premise</td>
+            <td>DIU-owned hardware</td>
+            <td><strong>Electricity + IT only</strong></td>
+            <td>Data sovereignty, but requires IT ops team</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px; color:#888; margin-top:12px;">
+        + Add: OpenAI API ~$20-50/month at scale (Phase 4+), SSL Wireless SMS ~varies per volume, domain registration ~$15/year.
+        Total production budget estimate: <strong>$50-150 USD/month</strong> depending on provider and AI usage.
+      </p>
+    </div>
+
+    <div class="warn-box">
+      <strong>Key requirement before Phase 4 (AI):</strong> The VPS or managed database must support the <code>pgvector</code> PostgreSQL extension. Hetzner, DigitalOcean, and AWS RDS all support this. Confirm with your hosting provider before Phase 4 begins. For Phases 1-3, any standard PostgreSQL 14+ instance works.
+    </div>
+
+    <div class="green-box">
+      <strong>Deployment verdict:</strong> The stack is battle-tested, fully open-source (except AI APIs), and deployable by one developer in a single afternoon using the Docker Compose file. The 90-day beta target (Phases 1-3) is achievable on a $25/month Hetzner VPS. Full production scale with AI requires upgrading to 8 GB RAM and adding pgvector — a one-line change in the Docker Compose config.
+    </div>
+
+  </div>
+
+</div>
+
+<div class="print-footer">
+  StudentsHub — Agentic AI University Operating System | Daffodil International University | Generated April 2026
+</div>
+
+</body>
+</html>

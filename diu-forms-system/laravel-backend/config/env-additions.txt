@@ -1,0 +1,64 @@
+# ── Add these to your .env file ─────────────────────────────────────
+
+# Queue driver (use Redis in production)
+QUEUE_CONNECTION=redis
+
+# Redis connection (used by queue + rate-limit cache)
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+# Laravel Mail (use Mailgun or SMTP in production)
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailgun.org
+MAIL_PORT=587
+MAIL_USERNAME=your-mailgun-username
+MAIL_PASSWORD=your-mailgun-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=no-reply@studentservices.diu.edu.bd
+MAIL_FROM_NAME="DIU Student Services"
+
+# SSL Wireless SMS Gateway
+SMS_ENABLED=true
+SMS_ENDPOINT=https://sms.sslwireless.com/pushapi/dynamic/server.php
+SMS_API_TOKEN=your-ssl-wireless-api-token
+SMS_SID=DIU-SVC
+
+# Portal URLs (used in email CTAs)
+APP_STUDENT_PORTAL_URL=https://portal.studentservices.diu.edu.bd
+APP_ADMIN_DASHBOARD_URL=https://admin.studentservices.diu.edu.bd
+
+# Notification limits (override defaults in config/notifications.php)
+NOTIF_MAX_EMAILS_HOUR=10
+NOTIF_MAX_SMS_DAY=5
+NOTIF_DUPE_WINDOW=30
+NOTIF_QUIET_ENABLED=true
+
+# Digest schedule
+DIGEST_HOURLY_MINUTE=30
+DIGEST_DAILY_AT=08:00
+DIGEST_MIN_EVENTS=2
+
+
+# ── Add to config/app.php (under 'aliases' or directly) ─────────────
+# 'student_portal_url'   => env('APP_STUDENT_PORTAL_URL', env('APP_URL') . '/portal'),
+# 'admin_dashboard_url'  => env('APP_ADMIN_DASHBOARD_URL', env('APP_URL') . '/admin'),
+
+
+# ── Start queue worker (run in a process manager like Supervisor) ────
+# php artisan queue:work redis --queue=notifications --tries=3 --timeout=30
+
+# ── Register the Artisan schedule in App\Console\Kernel.php ──────────
+# protected function schedule(Schedule $schedule): void
+# {
+#     $schedule->command('notifications:process-digests --delivery=digest_hourly')
+#              ->hourlyAt(config('notifications.digest.hourly_at_minute', 30))
+#              ->withoutOverlapping()
+#              ->runInBackground();
+#
+#     $schedule->command('notifications:process-digests --delivery=digest_daily')
+#              ->dailyAt(config('notifications.digest.daily_at', '08:00'))
+#              ->withoutOverlapping()
+#              ->runInBackground();
+# }
+# Then add to crontab: * * * * * cd /path-to-project && php artisan schedule:run >> /dev/null 2>&1

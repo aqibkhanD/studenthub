@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIU Student Services Portal</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary:   #1d4ed8;
+  --primary-h: #1e40af;
+  --primary-lt:#eff6ff;
+  --bg:        #f1f5f9;
+  --surface:   #ffffff;
+  --text:      #1e293b;
+  --muted:     #64748b;
+  --border:    #e2e8f0;
+  --green:     #16a34a;
+  --red:       #dc2626;
+  --amber:     #d97706;
+  --purple:    #7c3aed;
+  --radius:    10px;
+  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 20px rgba(0,0,0,.10);
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+/* ─── TOP NAV ──────────────────────────────────────── */
+.topnav {
+  background: var(--primary); padding: 0 24px; height: 56px;
+  display: flex; align-items: center; gap: 16px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+.topnav .logo { font-size: 15px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.topnav .logo svg { opacity: .9; }
+.logo-sub { font-size: 11px; color: #bfdbfe; font-weight: 400; }
+.topnav-links { display: flex; gap: 4px; margin-left: 24px; }
+.topnav-link { color: #bfdbfe; font-size: 13px; padding: 6px 12px; border-radius: 6px; cursor: pointer; text-decoration: none; transition: all .15s; display: flex; align-items: center; gap: 6px; border: none; background: none; font-family: inherit; }
+.topnav-link:hover  { background: #ffffff20; color: #fff; }
+.topnav-link.active { background: #ffffff20; color: #fff; font-weight: 600; }
+.topnav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; position: relative; }
+
+.notif-btn { position: relative; background: #ffffff20; border: none; cursor: pointer; color: #fff; padding: 7px 8px; border-radius: 6px; transition: background .15s; display: flex; align-items: center; }
+.notif-btn:hover { background: #ffffff30; }
+.notif-dot { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; background: #fbbf24; border-radius: 50%; border: 2px solid var(--primary); }
+
+.student-chip { display: flex; align-items: center; gap: 8px; background: #ffffff18; border-radius: 8px; padding: 4px 10px 4px 6px; }
+.student-chip .avatar { width: 28px; height: 28px; border-radius: 50%; background: #fbbf24; color: #1e293b; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.student-chip .name   { font-size: 12px; font-weight: 600; color: #fff; }
+.student-chip .sid    { font-size: 10px; color: #bfdbfe; }
+
+/* ─── NOTIFICATIONS DROPDOWN ────────────────────────── */
+.notif-panel {
+  display: none; position: absolute; top: calc(100% + 10px); right: 0;
+  width: 340px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-md); z-index: 200;
+}
+.notif-panel.open { display: block; }
+.notif-panel-head { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+.notif-panel-head button { background: none; border: none; font-size: 11px; color: var(--primary); cursor: pointer; }
+.notif-item { padding: 11px 16px; display: flex; gap: 10px; align-items: flex-start; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--primary-lt); }
+.notif-item.unread { background: #f8faff; }
+.notif-icon-wrap { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.notif-title { font-size: 12px; font-weight: 700; color: var(--text); }
+.notif-body  { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+.notif-time  { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+/* ─── VIEWS ─────────────────────────────────────────── */
+.view { display: none; padding: 28px 24px; max-width: 960px; margin: 0 auto; }
+.view.active { display: block; }
+
+/* ─── HOME VIEW ─────────────────────────────────────── */
+.welcome-banner {
+  background: linear-gradient(135deg, #1d4ed8 0%, #0f2744 100%);
+  border-radius: var(--radius); padding: 28px 32px; color: #fff;
+  margin-bottom: 24px; position: relative; overflow: hidden;
+}
+.welcome-banner::after {
+  content: ''; position: absolute; right: -20px; top: -20px;
+  width: 160px; height: 160px; border-radius: 50%;
+  background: rgba(255,255,255,.04); pointer-events: none;
+}
+.welcome-banner::before {
+  content: ''; position: absolute; right: 60px; top: 30px;
+  width: 80px; height: 80px; border-radius: 50%;
+  background: rgba(255,255,255,.06); pointer-events: none;
+}
+.welcome-banner h1 { font-size: 22px; font-weight: 800; }
+.welcome-banner p  { font-size: 13px; color: #bfdbfe; margin-top: 6px; }
+.welcome-banner .quick-stats { display: flex; gap: 24px; margin-top: 18px; flex-wrap: wrap; }
+.q-stat .q-val { font-size: 24px; font-weight: 800; }
+.q-stat .q-lbl { font-size: 11px; color: #bfdbfe; }
+
+.section-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.section-title .scount { background: var(--border); color: var(--muted); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
+
+.alert-bar {
+  border-radius: var(--radius); padding: 14px 18px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer; border: 1px solid;
+}
+.alert-bar.action { background: #fdf4ff; border-color: #e9d5ff; }
+.alert-bar.action:hover { background: #f3e8ff; }
+.alert-bar .alert-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.alert-bar .alert-title { font-size: 13px; font-weight: 700; color: var(--purple); }
+.alert-bar .alert-body  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+.cat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: all .15s; box-shadow: var(--shadow); }
+.cat-card:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(29,78,216,.12); transform: translateY(-1px); }
+.cat-icon-wrap { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+.cat-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.cat-desc  { font-size: 11px; color: var(--muted); line-height: 1.5; }
+.cat-count { font-size: 11px; color: var(--primary); font-weight: 600; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+
+.mini-submission { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; cursor: pointer; transition: background .1s; box-shadow: var(--shadow); }
+.mini-submission:hover { background: var(--primary-lt); }
+.mini-ref  { font-family: monospace; font-size: 11px; color: var(--muted); flex-shrink: 0; width: 130px; }
+.mini-form { font-size: 13px; font-weight: 600; flex: 1; }
+.mini-sub  { font-size: 11px; color: var(--muted); }
+
+/* ─── FORM BROWSER ───────────────────────────────────── */
+.form-search { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; box-shadow: var(--shadow); }
+.form-search svg { color: var(--muted); flex-shrink: 0; }
+.form-search input { border: none; background: none; font-size: 14px; outline: none; flex: 1; color: var(--text); }
+
+.cat-filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.cat-pill { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 5px; }
+.cat-pill:hover  { border-color: var(--primary); color: var(--primary); }
+.cat-pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.form-list-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all .15s; box-shadow: var(--shadow); }
+.form-list-item:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(29,78,216,.1); }
+.form-list-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.form-list-body { flex: 1; }
+.form-list-name { font-size: 14px; font-weight: 700; }
+.form-list-dept { font-size: 11px; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+.form-list-meta { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; align-items: center; }
+.meta-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; display: flex; align-items: center; gap: 3px; }
+.meta-tag.docs  { background: #fef3c7; color: #92400e; }
+.meta-tag.anon  { background: #f3e8ff; color: #6b21a8; }
+.meta-tag.auto  { background: #dcfce7; color: #14532d; }
+.meta-sla { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.form-list-arrow { color: var(--muted); flex-shrink: 0; }
+
+/* ─── SUBMISSION FORM ───────────────────────────────── */
+.form-header { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+.form-header h2 { font-size: 18px; font-weight: 800; }
+.form-header .form-dept { font-size: 12px; color: var(--muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+.form-header .form-sla  { font-size: 11px; background: #f0fdf4; color: var(--green); padding: 3px 10px; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; }
+
+.form-instructions { background: #fffbeb; border: 1px solid #fcd34d; border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px; font-size: 13px; color: #78350f; display: flex; gap: 10px; }
+.form-instructions svg { flex-shrink: 0; margin-top: 1px; }
+
+.form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.form-card h3 { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+.form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+.form-group.full { grid-column: span 2; }
+.form-group label { font-size: 12px; font-weight: 700; color: var(--text); }
+.form-group .req  { color: var(--red); }
+.form-group input, .form-group select, .form-group textarea {
+  border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px;
+  font-size: 13px; font-family: inherit; color: var(--text); outline: none; transition: border-color .15s; background: var(--surface);
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,.08); }
+.form-group .helper { font-size: 11px; color: var(--muted); }
+.form-group input.readonly-field { background: #f8fafc; color: var(--muted); cursor: not-allowed; }
+
+.file-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all .15s; background: var(--bg); }
+.file-zone:hover { border-color: var(--primary); background: var(--primary-lt); }
+.file-zone .fz-icon { display: flex; justify-content: center; margin-bottom: 8px; color: var(--muted); }
+.file-zone .fz-text { font-size: 13px; font-weight: 600; color: var(--muted); }
+.file-zone .fz-sub  { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.file-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.file-item { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 12px; }
+.file-item .fname { flex: 1; font-weight: 600; }
+.file-item .fsize { color: var(--muted); }
+.file-item .fdel  { background: none; border: none; color: var(--red); cursor: pointer; display: flex; align-items: center; }
+
+.anon-toggle { display: flex; align-items: flex-start; gap: 10px; padding: 14px; background: #fdf4ff; border: 1px solid #e9d5ff; border-radius: 8px; margin-bottom: 16px; }
+.anon-toggle input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; margin-top: 1px; flex-shrink: 0; accent-color: var(--purple); }
+.anon-toggle label { font-size: 13px; font-weight: 600; cursor: pointer; }
+.anon-toggle .anon-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+.form-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.btn { padding: 10px 22px; border-radius: 8px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 7px; font-family: inherit; }
+.btn-lg { padding: 12px 28px; font-size: 14px; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-h); }
+.btn-secondary { background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--bg); }
+.btn-ghost { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-family: inherit; }
+.btn-ghost:hover { color: var(--text); }
+
+/* ─── SUCCESS VIEW ──────────────────────────────────── */
+.success-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 48px 32px; text-align: center; box-shadow: var(--shadow-md); }
+.success-icon { display: flex; justify-content: center; margin-bottom: 20px; }
+.success-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.success-card p  { font-size: 14px; color: var(--muted); max-width: 400px; margin: 0 auto; }
+.success-ref { font-family: monospace; font-size: 20px; font-weight: 800; color: var(--primary); background: var(--primary-lt); padding: 10px 20px; border-radius: 8px; display: inline-block; margin: 20px 0; border: 1px solid #bfdbfe; }
+.sms-notice { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--green); margin: 0 auto; max-width: 380px; display: flex; align-items: center; gap: 8px; justify-content: center; }
+.success-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+
+/* ─── MY SUBMISSIONS VIEW ───────────────────────────── */
+.submissions-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.submissions-toolbar .search-wrap { flex: 1; min-width: 200px; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+.submissions-toolbar .search-wrap input { border: none; background: none; font-size: 13px; outline: none; flex: 1; color: var(--text); }
+.status-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.status-tab { padding: 5px 12px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); font-size: 11px; font-weight: 700; color: var(--muted); cursor: pointer; transition: all .15s; }
+.status-tab:hover  { border-color: var(--primary); color: var(--primary); }
+.status-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.submission-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; box-shadow: var(--shadow); overflow: hidden; }
+.sc-head { padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid transparent; cursor: pointer; }
+.sc-head:hover { background: #f8fafc; }
+.sc-head.expanded { border-bottom-color: var(--border); }
+.sc-ref   { font-family: monospace; font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.sc-form  { font-size: 14px; font-weight: 700; flex: 1; }
+.sc-date  { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.sc-chevron { color: var(--muted); transition: transform .2s; flex-shrink: 0; }
+.sc-chevron.open { transform: rotate(180deg); }
+.sc-body { display: none; padding: 16px 18px; }
+.sc-body.open { display: block; }
+
+/* Progress tracker */
+.progress-track { margin: 14px 0; }
+.progress-steps { display: flex; align-items: center; }
+.p-step { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.p-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border); background: var(--surface); color: var(--muted); flex-shrink: 0; z-index: 1; }
+.p-dot.done    { background: var(--green); border-color: var(--green); color: #fff; }
+.p-dot.current { background: var(--primary); border-color: var(--primary); color: #fff; }
+.p-dot.alert   { background: var(--red); border-color: var(--red); color: #fff; }
+.p-dot.warning { background: var(--amber); border-color: var(--amber); color: #fff; }
+.p-label { font-size: 10px; color: var(--muted); margin-top: 5px; text-align: center; font-weight: 600; white-space: nowrap; }
+.p-label.done    { color: var(--green); }
+.p-label.current { color: var(--primary); }
+.p-label.alert   { color: var(--red); }
+.p-connector { height: 2px; flex: 1; background: var(--border); }
+.p-connector.done { background: var(--green); }
+
+.admin-note { border-radius: 8px; padding: 12px 14px; font-size: 12px; margin-top: 12px; }
+.admin-note strong { font-weight: 700; display: block; margin-bottom: 4px; }
+.admin-note.info    { background: #fffbeb; border: 1px solid #fcd34d; color: #78350f; }
+.admin-note.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: var(--green); }
+.admin-note.danger  { background: #fff1f2; border: 1px solid #fecdd3; color: var(--red); }
+.admin-note.neutral { background: #f8fafc; border: 1px solid var(--border); color: var(--text); }
+
+.action-required-banner { background: #fdf4ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 14px; margin-top: 12px; }
+.action-required-banner strong { font-size: 13px; color: var(--purple); font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.action-required-banner p { font-size: 12px; color: var(--muted); }
+.admin-quote { background: #fff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 10px; margin-top: 8px; font-size: 12px; color: var(--text); font-style: italic; }
+.btn-resubmit { margin-top: 10px; padding: 8px 18px; background: var(--purple); color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit; }
+.btn-resubmit:hover { opacity: .9; }
+
+.empty-state { text-align: center; padding: 56px 24px; color: var(--muted); }
+.empty-state svg { margin: 0 auto 16px; display: block; opacity: .3; }
+.empty-state p { font-size: 14px; }
+
+/* Status badges */
+.status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.status-badge::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.6; flex-shrink: 0; }
+.s-submitted       { background:#eff6ff; color:#1d4ed8; }
+.s-routed          { background:#f0fdf4; color:#15803d; }
+.s-in_review       { background:#fefce8; color:#a16207; }
+.s-action_required { background:#fdf4ff; color:#7e22ce; }
+.s-escalated       { background:#fff1f2; color:#be123c; }
+.s-approved        { background:#f0fdf4; color:#15803d; }
+.s-rejected        { background:#fff1f2; color:#be123c; }
+.s-completed       { background:#f0fdf4; color:#15803d; }
+.s-returned        { background:#fff7ed; color:#c2410c; }
+.s-draft           { background:#f8fafc; color:var(--muted); }
+
+/* ─── TOGGLE SWITCH ─────────────────────────────────── */
+.toggle { position: relative; display: inline-block; width: 38px; height: 22px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #cbd5e1; border-radius: 22px; transition: .2s; }
+.toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+.toggle input:checked + .toggle-slider { background: var(--primary); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+.toggle input:disabled + .toggle-slider { background: #bfdbfe; cursor: not-allowed; }
+.toggle-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.toggle-row:last-child { border-bottom: none; }
+
+/* ─── SETTINGS VIEW ─────────────────────────────────── */
+.settings-s-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; }
+.settings-s-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.settings-s-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+.sn-field-row { display: flex; align-items: center; gap: 12px; }
+.sn-field-row label { font-size: 12px; font-weight: 600; color: var(--muted); min-width: 80px; }
+.sn-field-val { font-size: 13px; color: var(--text); }
+.sn-badge { font-size: 11px; font-weight: 600; background: var(--green-lt); color: var(--green); padding: 2px 8px; border-radius: 20px; }
+.sn-input { padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; color: var(--text); background: var(--surface); outline: none; }
+.sn-input:focus { border-color: var(--primary); }
+.sn-matrix { width: 100%; border-collapse: collapse; }
+.sn-matrix th { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); padding: 10px 12px; background: #f8fafc; border-bottom: 1px solid var(--border); text-align: left; }
+.sn-matrix td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.sn-matrix tr:last-child td { border-bottom: none; }
+.sn-ch-head { text-align: center; width: 80px; }
+.sn-ch-cell { text-align: center; }
+.sn-section-head td { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); background: #f8fafc; padding: 8px 12px; }
+.sn-toggle-wrap { display: flex; justify-content: center; }
+.toggle-label { font-size: 13px; font-weight: 600; color: var(--text); }
+.toggle-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ─── RESPONSIVE ────────────────────────────────────── */
+@media (max-width: 700px) {
+  .view { padding: 16px; }
+  .category-grid { grid-template-columns: 1fr 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-group.full { grid-column: span 1; }
+  .topnav-links { display: none; }
+}
+@media (max-width: 480px) { .category-grid { grid-template-columns: 1fr; } }
+
+.mt-8  { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a class="logo" onclick="showView('home', null); return false;" href="#">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    <div><div>DIU Student Services</div><div class="logo-sub">Daffodil International University</div></div>
+  </a>
+  <div class="topnav-links">
+    <button class="topnav-link active" id="nav-home" onclick="showView('home', this)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </button>
+    <button class="topnav-link" id="nav-new-form" onclick="showView('new-form', this)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      New Request
+    </button>
+    <button class="topnav-link" id="nav-my-submissions" onclick="showView('my-submissions', this)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
+      My Submissions
+    </button>
+  </div>
+  <div class="topnav-right">
+    <button class="notif-btn" title="Notification Settings" onclick="showView('settings', null)" style="opacity:.8" id="settingsBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+    <button class="notif-btn" onclick="toggleNotifications()" id="notifBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span class="notif-dot" id="notifDot"></span>
+    </button>
+    <!-- Notifications panel -->
+    <div class="notif-panel" id="notifPanel">
+      <div class="notif-panel-head">
+        Notifications
+        <button onclick="markAllRead()">Mark all read</button>
+      </div>
+      <div id="notifList"></div>
+    </div>
+    <div class="student-chip">
+      <div class="avatar">MA</div>
+      <div><div class="name">Md. Ariful Islam</div><div class="sid">221-15-5812 · CSE</div></div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════ VIEW: HOME ══════ -->
+<div class="view active" id="view-home">
+  <div class="welcome-banner">
+    <h1>Good morning, Ariful</h1>
+    <p>Track your requests and submit new forms through the Student Services portal.</p>
+    <div class="quick-stats">
+      <div class="q-stat"><div class="q-val" id="stat-active">3</div><div class="q-lbl">Active Requests</div></div>
+      <div class="q-stat"><div class="q-val" id="stat-action">1</div><div class="q-lbl">Action Required</div></div>
+      <div class="q-stat"><div class="q-val" id="stat-completed">5</div><div class="q-lbl">Completed</div></div>
+    </div>
+  </div>
+
+  <div id="homeActionAlert"></div>
+
+  <div class="section-title">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Submit a New Request
+  </div>
+
+  <div class="category-grid">
+    <div class="cat-card" onclick="selectCategory('academic_certification')">
+      <div class="cat-icon-wrap" style="background:#eff6ff;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      </div>
+      <div class="cat-title">Academic &amp; Certification</div>
+      <div class="cat-desc">Bonafide, character cert, migration, eligibility, completion letter</div>
+      <div class="cat-count">5 form types <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+    <div class="cat-card" onclick="selectCategory('complaint')">
+      <div class="cat-icon-wrap" style="background:#fdf4ff;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+      </div>
+      <div class="cat-title">Complaints</div>
+      <div class="cat-desc">Student complaints and misconduct reports. Anonymous option available.</div>
+      <div class="cat-count">2 form types <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+    <div class="cat-card" onclick="selectCategory('career_counseling')">
+      <div class="cat-icon-wrap" style="background:#fffbeb;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+      </div>
+      <div class="cat-title">Career Counseling</div>
+      <div class="cat-desc">Career guidance sessions, internship and recommendation letter requests</div>
+      <div class="cat-count">2 form types <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+    <div class="cat-card" onclick="selectCategory('club_cocurricular')">
+      <div class="cat-icon-wrap" style="background:#f0fdf4;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg>
+      </div>
+      <div class="cat-title">Club &amp; Co-curricular</div>
+      <div class="cat-desc">Join clubs, form new clubs, apply for event and committee approvals</div>
+      <div class="cat-count">3 form types <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+    <div class="cat-card" onclick="selectCategory('finance')">
+      <div class="cat-icon-wrap" style="background:#fef9c3;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      </div>
+      <div class="cat-title">Finance &amp; Accounts</div>
+      <div class="cat-desc">Fee waiver, scholarship applications, payment dispute resolution</div>
+      <div class="cat-count">2 form types <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+    <div class="cat-card" onclick="selectCategory('it_support')">
+      <div class="cat-icon-wrap" style="background:#f1f5f9;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div class="cat-title">IT Support</div>
+      <div class="cat-desc">Portal access issues, LMS problems, student ID / email recovery</div>
+      <div class="cat-count">1 form type <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
+    Recent Submissions <span class="scount" id="recentCount">3</span>
+  </div>
+  <div id="recentSubmissions"></div>
+</div>
+
+<!-- ══════ VIEW: NEW FORM (Browse) ══════ -->
+<div class="view" id="view-new-form">
+  <div class="section-title" style="margin-bottom:20px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Choose a Form Type
+  </div>
+
+  <div class="form-search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="Search forms — bonafide, complaint, career…" id="formSearch" oninput="filterForms()">
+  </div>
+
+  <div class="cat-filter-row" id="catFilters">
+    <div class="cat-pill active" onclick="setCatFilter('all', this)">All</div>
+    <div class="cat-pill" onclick="setCatFilter('academic_certification', this)">Academic</div>
+    <div class="cat-pill" onclick="setCatFilter('complaint', this)">Complaints</div>
+    <div class="cat-pill" onclick="setCatFilter('career_counseling', this)">Career</div>
+    <div class="cat-pill" onclick="setCatFilter('club_cocurricular', this)">Clubs</div>
+    <div class="cat-pill" onclick="setCatFilter('finance', this)">Finance</div>
+    <div class="cat-pill" onclick="setCatFilter('it_support', this)">IT Support</div>
+  </div>
+
+  <div id="formList"></div>
+</div>
+
+<!-- ══════ VIEW: SUBMISSION FORM ══════ -->
+<div class="view" id="view-form">
+  <button class="btn-ghost" onclick="showView('new-form', null)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to form list
+  </button>
+
+  <div class="form-header mt-16">
+    <h2 id="formTitle">Bonafide Certificate</h2>
+    <div class="form-dept" id="formDept">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Registrar's Office
+    </div>
+    <span class="form-sla" id="formSLA">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Typical response: 24 hours
+    </span>
+  </div>
+
+  <div class="form-instructions" id="formInstructions">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span id="formInstructionsText"></span>
+  </div>
+
+  <form id="submissionForm" onsubmit="submitForm(event)">
+    <div class="form-card">
+      <h3>Student Information</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" value="Md. Ariful Islam" readonly class="readonly-field">
+        </div>
+        <div class="form-group">
+          <label>Student ID</label>
+          <input type="text" value="221-15-5812" readonly class="readonly-field">
+        </div>
+        <div class="form-group">
+          <label>Department / Program</label>
+          <input type="text" value="CSE — B.Sc. in Computer Science" readonly class="readonly-field">
+        </div>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input type="tel" value="+8801712345678" id="studentPhone">
+          <div class="helper">SMS notifications will be sent to this number</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card" id="dynamicFields"><h3>Request Details</h3></div>
+
+    <div id="anonSection" style="display:none; margin-bottom:16px;">
+      <div class="anon-toggle">
+        <input type="checkbox" id="anonCheck">
+        <div>
+          <label for="anonCheck">Submit this report anonymously</label>
+          <div class="anon-sub">Your identity will be hidden from admin staff. Only Super Admin can see your identity in special circumstances.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card" id="uploadSection" style="display:none;">
+      <h3>Supporting Documents</h3>
+      <div class="file-zone" onclick="triggerUpload()">
+        <div class="fz-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+        </div>
+        <div class="fz-text">Click to upload or drag files here</div>
+        <div class="fz-sub">PDF, JPG, PNG — Max 5MB each · Max 5 files</div>
+      </div>
+      <div class="file-list" id="fileList"></div>
+      <input type="file" id="fileInput" style="display:none" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="handleFiles(this)">
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-lg btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Submit Request
+      </button>
+      <button type="button" class="btn btn-lg btn-secondary" onclick="saveDraft()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save as Draft
+      </button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:10px;">You will receive an SMS and in-app notification when the status of your request changes.</div>
+  </form>
+</div>
+
+<!-- ══════ VIEW: SUCCESS ══════ -->
+<div class="view" id="view-success">
+  <div class="success-card">
+    <div class="success-icon">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+    </div>
+    <h2>Request Submitted</h2>
+    <p>Your request has been received and routed to the appropriate department. You will be notified of any updates.</p>
+    <div class="success-ref" id="successRef">DIU-2026-00422</div>
+    <div class="sms-notice">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      Confirmation SMS sent to +8801712345678
+    </div>
+    <div class="success-btns">
+      <button class="btn btn-lg btn-primary" onclick="showView('my-submissions', null)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
+        Track My Requests
+      </button>
+      <button class="btn btn-lg btn-secondary" onclick="showView('home', null)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Back to Home
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ VIEW: MY SUBMISSIONS ══════ -->
+<div class="view" id="view-my-submissions">
+  <div class="section-title" style="margin-bottom:16px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
+    My Submissions
+  </div>
+
+  <div class="submissions-toolbar">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search by reference or form name…" id="subSearch" oninput="renderSubmissions()">
+    </div>
+    <div class="status-tabs" id="statusTabs">
+      <div class="status-tab active" onclick="setSubFilter('all', this)">All</div>
+      <div class="status-tab" onclick="setSubFilter('action_required', this)">Action Required</div>
+      <div class="status-tab" onclick="setSubFilter('in_review', this)">In Review</div>
+      <div class="status-tab" onclick="setSubFilter('completed', this)">Completed</div>
+      <div class="status-tab" onclick="setSubFilter('rejected', this)">Rejected</div>
+      <div class="status-tab" onclick="setSubFilter('draft', this)">Drafts</div>
+    </div>
+  </div>
+
+  <div id="submissionsList"></div>
+</div>
+
+<!-- ══════ VIEW: SETTINGS ══════ -->
+<div class="view" id="view-settings">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+    <button class="btn-ghost" onclick="showView('home', null)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
+    <div class="section-title" style="margin:0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Notification Settings
+    </div>
+  </div>
+
+  <!-- Profile summary -->
+  <div class="settings-s-card" style="margin-bottom:20px">
+    <div class="settings-s-head">
+      <div>
+        <div style="font-size:14px;font-weight:700">Account</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Your registered contact details used for notifications</div>
+      </div>
+    </div>
+    <div class="settings-s-body">
+      <div class="sn-field-row">
+        <label>Email</label>
+        <span class="sn-field-val">ariful.islam@diu.edu.bd</span>
+        <span class="sn-badge">Verified</span>
+      </div>
+      <div class="sn-field-row">
+        <label>Mobile (SMS)</label>
+        <input type="tel" id="sn_phone" value="+8801711223344" class="sn-input">
+        <button class="btn btn-secondary btn-sm" onclick="savePhone()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-category email/SMS preferences -->
+  <div class="settings-s-card" style="margin-bottom:20px">
+    <div class="settings-s-head">
+      <div>
+        <div style="font-size:14px;font-weight:700">Notification Preferences by Event</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Choose how you are notified for each update type</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="resetStudentNotifDefaults()">Reset Defaults</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="sn-matrix">
+        <thead>
+          <tr>
+            <th style="width:45%">Event</th>
+            <th class="sn-ch-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Email
+            </th>
+            <th class="sn-ch-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .84h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+              SMS
+            </th>
+            <th class="sn-ch-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+              In-App
+            </th>
+          </tr>
+        </thead>
+        <tbody id="snMatrixBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Quiet hours -->
+  <div class="settings-s-card" style="margin-bottom:20px">
+    <div class="settings-s-head">
+      <div>
+        <div style="font-size:14px;font-weight:700">Quiet Hours</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">No SMS or non-urgent emails during these hours</div>
+      </div>
+      <label class="toggle"><input type="checkbox" id="sn_quiet_enabled" checked onchange="toggleSnQuietHours()"><span class="toggle-slider"></span></label>
+    </div>
+    <div id="snQuietFields" class="settings-s-body" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+      <div class="sn-field-row" style="gap:8px">
+        <label>Start:</label>
+        <input type="time" class="sn-input" id="sn_quiet_start" value="22:00" style="width:110px">
+      </div>
+      <div class="sn-field-row" style="gap:8px">
+        <label>End:</label>
+        <input type="time" class="sn-input" id="sn_quiet_end" value="07:30" style="width:110px">
+      </div>
+      <span style="font-size:11px;color:var(--muted)">BST (UTC+6). Urgent actions still notify immediately.</span>
+    </div>
+  </div>
+
+  <!-- Unsubscribe -->
+  <div class="settings-s-card" style="margin-bottom:20px">
+    <div class="settings-s-head">
+      <div>
+        <div style="font-size:14px;font-weight:700">Email Unsubscribe</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Manage which emails you receive from Student Services</div>
+      </div>
+    </div>
+    <div class="settings-s-body">
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">All email notifications</div>
+          <div class="toggle-sub">Unsubscribing stops all Student Services emails. You can re-subscribe at any time.</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="sn_email_global" checked onchange="toggleGlobalEmail()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">SMS notifications</div>
+          <div class="toggle-sub">Stops all SMS alerts including urgent action-required messages.</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="sn_sms_global" checked><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;justify-content:flex-end;padding-top:4px">
+    <button class="btn btn-secondary" onclick="showView('home', null)">Cancel</button>
+    <button class="btn btn-primary" onclick="saveStudentNotifPrefs()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Save Preferences
+    </button>
+  </div>
+</div>
+
+<!-- ══════ JAVASCRIPT ══════ -->
+<script>
+/* ─────────────────────────────────────────────────────
+   FORM TYPE DEFINITIONS
+───────────────────────────────────────────────────── */
+const FORM_TYPES = [
+  {
+    id: 'bonafide', name: 'Bonafide Certificate',
+    category: 'academic_certification', dept: "Registrar's Office",
+    iconBg: '#eff6ff', iconColor: '#1d4ed8',
+    iconPath: 'M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c3 3 9 3 12 0v-5',
+    sla: '24 hours', docs: false, anon: false, auto: true,
+    instructions: 'A bonafide certificate confirms your active enrollment status. This will be auto-generated and available within 24 hours of approval.',
+    fields: [
+      { key:'purpose', label:'Purpose of Certificate', type:'select', required:true,
+        options:['Bank Account Opening','Visa Application','Scholarship Application','Government Job Application','Other'] },
+      { key:'addressed_to', label:'Addressed To (Optional)', type:'text', required:false, placeholder:'e.g. The Manager, Dutch Bangla Bank' },
+      { key:'num_copies', label:'Number of Copies', type:'select', required:true, options:['1','2','3'] },
+      { key:'remarks', label:'Additional Remarks', type:'textarea', required:false, placeholder:'Any specific requirements…' },
+    ]
+  },
+  {
+    id: 'character-cert', name: 'Character Certificate',
+    category: 'academic_certification', dept: "Registrar's Office",
+    iconBg: '#eff6ff', iconColor: '#1d4ed8',
+    iconPath: 'M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c3 3 9 3 12 0v-5',
+    sla: '48 hours', docs: false, anon: false, auto: false,
+    instructions: 'Character certificates are issued for students who have not been subject to any disciplinary action during their enrollment.',
+    fields: [
+      { key:'purpose', label:'Purpose', type:'text', required:true, placeholder:'e.g. Employment, Higher Studies' },
+      { key:'addressed_to', label:'Addressed To', type:'text', required:false, placeholder:'e.g. The HR Manager, XYZ Company' },
+      { key:'language', label:'Language Preference', type:'select', required:true, options:['English','Bangla'] },
+    ]
+  },
+  {
+    id: 'migration', name: 'Migration Certificate',
+    category: 'academic_certification', dept: "Registrar's Office",
+    iconBg: '#eff6ff', iconColor: '#1d4ed8',
+    iconPath: 'M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c3 3 9 3 12 0v-5',
+    sla: '5 working days', docs: true, anon: false, auto: false,
+    instructions: 'Migration certificates are required when transferring to another university. This requires multi-department approval and may take up to 5 working days.',
+    fields: [
+      { key:'destination_univ', label:'Destination University', type:'text', required:true, placeholder:'e.g. BUET, NSU, BRAC University' },
+      { key:'reason', label:'Reason for Migration', type:'textarea', required:true, placeholder:'Please explain why you are transferring…' },
+      { key:'completion_status', label:'Current Academic Status', type:'select', required:true, options:['Completed Degree','Mid-semester Transfer','Other'] },
+    ]
+  },
+  {
+    id: 'eligibility', name: 'Eligibility Certificate',
+    category: 'academic_certification', dept: "Registrar's Office",
+    iconBg: '#eff6ff', iconColor: '#1d4ed8',
+    iconPath: 'M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c3 3 9 3 12 0v-5',
+    sla: '48 hours', docs: false, anon: false, auto: false,
+    instructions: 'Eligibility certificates confirm that your academic qualifications meet the requirements for a specific program or examination.',
+    fields: [
+      { key:'purpose', label:'Purpose', type:'select', required:true, options:['PSC / BCS Exam','Job Application','Further Studies','Other'] },
+      { key:'addressed_to', label:'Addressed To', type:'text', required:false, placeholder:'e.g. Bangladesh Public Service Commission' },
+    ]
+  },
+  {
+    id: 'completion', name: 'Course Completion Letter',
+    category: 'academic_certification', dept: "Registrar's Office",
+    iconBg: '#eff6ff', iconColor: '#1d4ed8',
+    iconPath: 'M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c3 3 9 3 12 0v-5',
+    sla: '24 hours', docs: false, anon: false, auto: true,
+    instructions: 'A completion letter confirms you have fulfilled all requirements for your degree program. Auto-generated upon approval.',
+    fields: [
+      { key:'addressed_to', label:'Addressed To', type:'text', required:false, placeholder:'e.g. Bangladesh Bank, BRAC' },
+      { key:'purpose', label:'Purpose', type:'textarea', required:true, placeholder:'State the reason you require this letter…' },
+    ]
+  },
+  {
+    id: 'complaint', name: 'Student Complaint',
+    category: 'complaint', dept: 'Student Affairs',
+    iconBg: '#fdf4ff', iconColor: '#7c3aed',
+    iconPath: 'M3 11l19-9-9 19-2-8-8-2z',
+    sla: '24 hours', docs: true, anon: true, auto: false,
+    instructions: 'Submit a formal complaint. You may choose to remain anonymous — your identity will only be visible to the Super Admin.',
+    fields: [
+      { key:'complaint_type', label:'Complaint Type', type:'select', required:true,
+        options:['Academic Issue','Administrative Issue','Faculty Conduct','Peer Misconduct','Facility Issue','Other'] },
+      { key:'subject', label:'Subject', type:'text', required:true, placeholder:'Brief subject of your complaint' },
+      { key:'description', label:'Detailed Description', type:'textarea', required:true, placeholder:'Describe the incident in detail, including dates, names, and locations…' },
+      { key:'desired_outcome', label:'Desired Outcome', type:'textarea', required:false, placeholder:'What resolution are you seeking?' },
+    ]
+  },
+  {
+    id: 'general-complaint', name: 'General Feedback / Suggestion',
+    category: 'complaint', dept: 'Student Affairs',
+    iconBg: '#fdf4ff', iconColor: '#7c3aed',
+    iconPath: 'M3 11l19-9-9 19-2-8-8-2z',
+    sla: '72 hours', docs: false, anon: true, auto: false,
+    instructions: 'Submit general feedback or improvement suggestions about university services, facilities, or processes.',
+    fields: [
+      { key:'area', label:'Area of Feedback', type:'select', required:true,
+        options:['Academic Services','Administrative Services','Facilities','IT Services','Food & Canteen','Transport','Other'] },
+      { key:'subject', label:'Subject', type:'text', required:true, placeholder:'Brief summary' },
+      { key:'message', label:'Your Feedback', type:'textarea', required:true, placeholder:'Please provide your feedback or suggestion in detail…' },
+    ]
+  },
+  {
+    id: 'career-counseling', name: 'Career Counseling Request',
+    category: 'career_counseling', dept: 'Career Services',
+    iconBg: '#fffbeb', iconColor: '#d97706',
+    iconPath: "M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16M2 7h20v14a2 2 0 01-2 2H4a2 2 0 01-2-2z",
+    sla: '48 hours', docs: false, anon: false, auto: false,
+    instructions: 'Request a one-on-one career counseling session with our career advisors. Available for all students and recent graduates.',
+    fields: [
+      { key:'session_type', label:'Session Type', type:'select', required:true,
+        options:['CV Review','Job Search Strategy','Interview Preparation','Career Change Guidance','Higher Studies Advice'] },
+      { key:'preferred_date', label:'Preferred Date', type:'date', required:true },
+      { key:'preferred_time', label:'Preferred Time Slot', type:'select', required:true,
+        options:['9:00 AM – 10:00 AM','10:00 AM – 11:00 AM','11:00 AM – 12:00 PM','2:00 PM – 3:00 PM','3:00 PM – 4:00 PM'] },
+      { key:'goals', label:'What do you want to achieve?', type:'textarea', required:true, placeholder:'Tell us about your career goals and challenges…' },
+    ]
+  },
+  {
+    id: 'internship-letter', name: 'Internship Recommendation Letter',
+    category: 'career_counseling', dept: 'Career Services',
+    iconBg: '#fffbeb', iconColor: '#d97706',
+    iconPath: "M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16M2 7h20v14a2 2 0 01-2 2H4a2 2 0 01-2-2z",
+    sla: '3 working days', docs: false, anon: false, auto: false,
+    instructions: 'Request an official recommendation letter from the Career Services office for internship or employment applications.',
+    fields: [
+      { key:'company_name', label:'Company / Organisation Name', type:'text', required:true, placeholder:'e.g. Grameenphone, Pathao, BRAC' },
+      { key:'role', label:'Position / Role', type:'text', required:true, placeholder:'e.g. Software Engineering Intern' },
+      { key:'start_date', label:'Expected Start Date', type:'date', required:true },
+      { key:'remarks', label:'Additional Notes', type:'textarea', required:false, placeholder:'Any specific skills or achievements to mention?' },
+    ]
+  },
+  {
+    id: 'club-membership', name: 'Club Membership Application',
+    category: 'club_cocurricular', dept: 'Club & Co-curricular Affairs',
+    iconBg: '#f0fdf4', iconColor: '#16a34a',
+    iconPath: "M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0012 0V2z",
+    sla: '72 hours', docs: false, anon: false, auto: false,
+    instructions: "Apply to join one of DIU's official student clubs. Approval is typically within 72 hours.",
+    fields: [
+      { key:'club_name', label:'Club Name', type:'select', required:true,
+        options:['DIU Computer Club','DIU Cultural Club','DIU Sports Club','DIU Debate Club','DIU Photography Club','DIU Robotics Club','Other'] },
+      { key:'motivation', label:'Why do you want to join?', type:'textarea', required:true, placeholder:'Tell us about your motivation and relevant experience…' },
+      { key:'skills', label:'Relevant Skills / Experience', type:'text', required:false, placeholder:'e.g. Photography, programming, public speaking…' },
+    ]
+  },
+  {
+    id: 'new-club', name: 'New Club Formation Request',
+    category: 'club_cocurricular', dept: 'Club & Co-curricular Affairs',
+    iconBg: '#f0fdf4', iconColor: '#16a34a',
+    iconPath: "M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0012 0V2z",
+    sla: '10 working days', docs: true, anon: false, auto: false,
+    instructions: 'Proposals for new clubs require a minimum of 10 founding members and a faculty advisor. Please attach your club constitution document.',
+    fields: [
+      { key:'club_name', label:'Proposed Club Name', type:'text', required:true, placeholder:'e.g. DIU Astronomy Club' },
+      { key:'club_type', label:'Club Type', type:'select', required:true, options:['Academic / Technical','Arts & Culture','Sports & Fitness','Community Service','Other'] },
+      { key:'description', label:'Club Description & Goals', type:'textarea', required:true, placeholder:'Describe your club vision and activities…' },
+      { key:'founding_members', label:'Number of Founding Members', type:'number', required:true, placeholder:'Minimum 10' },
+      { key:'faculty_advisor', label:'Proposed Faculty Advisor', type:'text', required:true, placeholder:'Full name of faculty member who has agreed to advise' },
+    ]
+  },
+  {
+    id: 'event-approval', name: 'Event / Program Approval',
+    category: 'club_cocurricular', dept: 'Club & Co-curricular Affairs',
+    iconBg: '#f0fdf4', iconColor: '#16a34a',
+    iconPath: "M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0012 0V2z",
+    sla: '5 working days', docs: true, anon: false, auto: false,
+    instructions: 'Submit an event approval request at least 5 working days before the event date. Attach your event proposal and budget breakdown.',
+    fields: [
+      { key:'event_name', label:'Event Name', type:'text', required:true, placeholder:'e.g. DIU Tech Fest 2026' },
+      { key:'event_date', label:'Proposed Event Date', type:'date', required:true },
+      { key:'venue', label:'Venue / Location', type:'text', required:true, placeholder:'e.g. Auditorium, Main Campus' },
+      { key:'expected_attendance', label:'Expected Attendance', type:'number', required:true, placeholder:'Estimated number of attendees' },
+      { key:'budget', label:'Estimated Budget (BDT)', type:'number', required:true, placeholder:'e.g. 50000' },
+    ]
+  },
+  {
+    id: 'fee-waiver', name: 'Fee Waiver Request',
+    category: 'finance', dept: 'Finance & Accounts',
+    iconBg: '#fef9c3', iconColor: '#ca8a04',
+    iconPath: "M2 5h20v14a2 2 0 01-2 2H4a2 2 0 01-2-2zM2 10h20",
+    sla: '4 working days', docs: true, anon: false, auto: false,
+    instructions: 'Fee waiver requests are reviewed by the Finance Office and require Dean approval. Supporting income documents are mandatory.',
+    fields: [
+      { key:'waiver_type', label:'Waiver Type', type:'select', required:true,
+        options:['Full Tuition Waiver','Partial Waiver (50%)','Semester Fee Extension','Installment Plan Request'] },
+      { key:'reason', label:'Reason for Request', type:'textarea', required:true, placeholder:'Please explain your financial circumstances…' },
+      { key:'semester', label:'Applicable Semester', type:'text', required:true, placeholder:'e.g. Spring 2026' },
+      { key:'guardian_income', label:'Guardian Monthly Income (BDT)', type:'number', required:true, placeholder:'e.g. 25000' },
+    ]
+  },
+  {
+    id: 'scholarship', name: 'Scholarship Application',
+    category: 'finance', dept: 'Finance & Accounts',
+    iconBg: '#fef9c3', iconColor: '#ca8a04',
+    iconPath: "M2 5h20v14a2 2 0 01-2 2H4a2 2 0 01-2-2zM2 10h20",
+    sla: '10 working days', docs: true, anon: false, auto: false,
+    instructions: 'Scholarship applications are reviewed quarterly. Attach your academic transcript, income certificate, and a personal statement.',
+    fields: [
+      { key:'scholarship_type', label:'Scholarship Type', type:'select', required:true,
+        options:['Merit-based','Need-based','Vice Chancellor Merit','Departmental Award'] },
+      { key:'cgpa', label:'Current CGPA', type:'text', required:true, placeholder:'e.g. 3.75' },
+      { key:'semester', label:'Applicable Semester', type:'text', required:true, placeholder:'e.g. Spring 2026' },
+      { key:'statement', label:'Personal Statement', type:'textarea', required:true, placeholder:'Describe your academic achievements and financial situation…' },
+    ]
+  },
+  {
+    id: 'it-support', name: 'IT Support Ticket',
+    category: 'it_support', dept: 'IT Department',
+    iconBg: '#f1f5f9', iconColor: '#475569',
+    iconPath: "M2 3h20v14a2 2 0 01-2 2H4a2 2 0 01-2-2zM8 21h8M12 17v4",
+    sla: '24 hours', docs: false, anon: false, auto: false,
+    instructions: 'Submit an IT support ticket for portal access issues, LMS problems, or student email recovery.',
+    fields: [
+      { key:'issue_type', label:'Issue Type', type:'select', required:true,
+        options:['Portal Login / Access','LMS Issue','Student Email Recovery','Student ID Card','Bluebell App Issue','Other'] },
+      { key:'description', label:'Describe the Issue', type:'textarea', required:true, placeholder:'Describe the problem you are experiencing, including any error messages…' },
+      { key:'urgency', label:'Urgency Level', type:'select', required:true, options:['Normal','Urgent (affects exam/class)'] },
+    ]
+  },
+];
+
+/* ─────────────────────────────────────────────────────
+   SUBMISSION STATE  (in-memory; acts as the DB in prototype)
+───────────────────────────────────────────────────── */
+let SUBMISSIONS = [
+  {
+    id: 'DIU-2026-00418', formId: 'fee-waiver', formName: 'Fee Waiver Request',
+    dept: 'Finance & Accounts', status: 'action_required',
+    submittedAt: new Date(Date.now() - 86400000), // 1 day ago
+    adminNote: 'Please attach a copy of your parent\'s income certificate or bank statement. Without this document we are unable to process the fee waiver.',
+    resubmitDeadline: '7 April 2026',
+    data: { waiver_type: 'Partial Waiver (50%)', semester: 'Spring 2026' }
+  },
+  {
+    id: 'DIU-2026-00421', formId: 'bonafide', formName: 'Bonafide Certificate',
+    dept: "Registrar's Office", status: 'submitted',
+    submittedAt: new Date(Date.now() - 7200000), // 2h ago
+    adminNote: "Your request is in the Registrar's Office queue. Expected response within 24 hours.",
+    data: { purpose: 'Bank Account Opening', num_copies: '1' }
+  },
+  {
+    id: 'DIU-2026-00412', formId: 'eligibility', formName: 'Eligibility Certificate',
+    dept: "Registrar's Office", status: 'in_review',
+    submittedAt: new Date(Date.now() - 1800000), // 30m ago
+    adminNote: 'Your request is under review by the Registrar\'s Office.',
+    data: { purpose: 'PSC / BCS Exam' }
+  },
+  {
+    id: 'DIU-2026-00405', formId: 'character-cert', formName: 'Character Certificate',
+    dept: "Registrar's Office", status: 'completed',
+    submittedAt: new Date(Date.now() - 8 * 86400000), // 8 days ago
+    adminNote: 'Your Character Certificate has been processed and is available for collection at the Registrar\'s Office. Please bring your student ID.',
+    hasCertificate: true,
+    data: { purpose: 'Employment', language: 'English' }
+  },
+  {
+    id: 'DIU-2026-00398', formId: 'new-club', formName: 'New Club Formation Request',
+    dept: 'Club & Co-curricular Affairs', status: 'rejected',
+    submittedAt: new Date(Date.now() - 15 * 86400000), // 15 days ago
+    adminNote: 'A Photography Club already exists at DIU. We encourage you to join the existing club instead. You can reapply for a different club concept. Contact clubs@diu.edu.bd for guidance.',
+    data: { club_name: 'Photography Club', founding_members: '12' }
+  },
+];
+
+let NOTIFICATIONS = [
+  { id: 1, type: 'action', title: 'Action Required — DIU-2026-00418', body: 'Your Fee Waiver request was returned. Please attach your income certificate and resubmit by Apr 7.', time: '1 day ago', read: false, submissionId: 'DIU-2026-00418' },
+  { id: 2, type: 'info', title: 'Request Received — DIU-2026-00421', body: 'Your Bonafide Certificate request has been received and is in queue.', time: '2 hours ago', read: false, submissionId: 'DIU-2026-00421' },
+  { id: 3, type: 'success', title: 'Completed — DIU-2026-00405', body: 'Your Character Certificate is ready. Visit the Registrar\'s Office with your student ID.', time: '8 days ago', read: true, submissionId: 'DIU-2026-00405' },
+];
+
+/* ─────────────────────────────────────────────────────
+   APP STATE
+───────────────────────────────────────────────────── */
+let selectedFormType = null;
+let catFilter = 'all';
+let subFilter = 'all';
+let uploadedFiles = [];
+let resubmitData = null; // pre-fill data for resubmit flow
+
+/* ─────────────────────────────────────────────────────
+   VIEW SWITCHING
+───────────────────────────────────────────────────── */
+function showView(name, trigger) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${name}`).classList.add('active');
+  document.querySelectorAll('.topnav-link').forEach(l => l.classList.remove('active'));
+  const navBtn = document.getElementById(`nav-${name}`);
+  if (navBtn) navBtn.classList.add('active');
+  if (trigger && trigger.classList && trigger.classList.contains('topnav-link')) {
+    trigger.classList.add('active');
+  }
+  window.scrollTo(0, 0);
+  if (name === 'home') refreshHome();
+  if (name === 'my-submissions') renderSubmissions();
+  if (name === 'settings') renderSnMatrix();
+  closeNotifications();
+}
+
+/* ─────────────────────────────────────────────────────
+   HOME VIEW
+───────────────────────────────────────────────────── */
+function refreshHome() {
+  const active    = SUBMISSIONS.filter(s => ['submitted','in_review','routed'].includes(s.status)).length;
+  const action    = SUBMISSIONS.filter(s => s.status === 'action_required').length;
+  const completed = SUBMISSIONS.filter(s => s.status === 'completed').length;
+
+  document.getElementById('stat-active').textContent    = active;
+  document.getElementById('stat-action').textContent    = action;
+  document.getElementById('stat-completed').textContent = completed;
+
+  // Action required alert
+  const alertEl = document.getElementById('homeActionAlert');
+  const actionItems = SUBMISSIONS.filter(s => s.status === 'action_required');
+  if (actionItems.length) {
+    const s = actionItems[0];
+    alertEl.innerHTML = `
+      <div class="alert-bar action" onclick="openSubmission('${s.id}')">
+        <div class="alert-icon" style="background:#f3e8ff">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+        </div>
+        <div style="flex:1">
+          <div class="alert-title">Action Required — ${s.id}</div>
+          <div class="alert-body">${s.formName} was returned. ${s.resubmitDeadline ? 'Please resubmit by ' + s.resubmitDeadline + '.' : ''}</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`;
+  } else {
+    alertEl.innerHTML = '';
+  }
+
+  // Recent submissions
+  const recent = [...SUBMISSIONS].sort((a,b) => b.submittedAt - a.submittedAt).slice(0, 3);
+  document.getElementById('recentCount').textContent = recent.length;
+  document.getElementById('recentSubmissions').innerHTML = recent.map(s => `
+    <div class="mini-submission" onclick="openSubmission('${s.id}')">
+      <span class="mini-ref">${s.id}</span>
+      <div><div class="mini-form">${s.formName}</div><div class="mini-sub">${timeAgo(s.submittedAt)}</div></div>
+      <span class="status-badge s-${s.status}">${statusLabel(s.status)}</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`).join('');
+}
+
+function openSubmission(id) {
+  showView('my-submissions', null);
+  setTimeout(() => {
+    const card = document.querySelector(`[data-sub-id="${id}"]`);
+    if (card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); card.click(); }
+  }, 80);
+}
+
+/* ─────────────────────────────────────────────────────
+   FORM BROWSER
+───────────────────────────────────────────────────── */
+function selectCategory(cat) {
+  setCatFilter(cat, document.querySelector(`.cat-pill:nth-child(${['all','academic_certification','complaint','career_counseling','club_cocurricular','finance','it_support'].indexOf(cat) + 1})`));
+  showView('new-form', null);
+}
+
+function setCatFilter(cat, el) {
+  catFilter = cat;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderFormList();
+}
+
+function filterForms() { renderFormList(); }
+
+function renderFormList() {
+  const q    = (document.getElementById('formSearch')?.value || '').toLowerCase();
+  const list = document.getElementById('formList');
+  const filtered = FORM_TYPES.filter(f =>
+    (catFilter === 'all' || f.category === catFilter) &&
+    (!q || f.name.toLowerCase().includes(q) || f.dept.toLowerCase().includes(q))
+  );
+  if (!filtered.length) {
+    list.innerHTML = `<div style="text-align:center;padding:48px;color:var(--muted)">No forms found matching your search.</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(f => `
+    <div class="form-list-item" onclick="openForm('${f.id}')">
+      <div class="form-list-icon" style="background:${f.iconBg}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${f.iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${f.iconPath}"/></svg>
+      </div>
+      <div class="form-list-body">
+        <div class="form-list-name">${f.name}</div>
+        <div class="form-list-dept">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${f.dept}
+        </div>
+        <div class="form-list-meta">
+          <span class="meta-sla">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${f.sla}
+          </span>
+          ${f.docs ? '<span class="meta-tag docs">Docs required</span>' : ''}
+          ${f.anon ? '<span class="meta-tag anon">Anonymous option</span>' : ''}
+          ${f.auto ? '<span class="meta-tag auto">Auto-generated</span>' : ''}
+        </div>
+      </div>
+      <div class="form-list-arrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>`).join('');
+}
+
+/* ─────────────────────────────────────────────────────
+   OPEN FORM
+───────────────────────────────────────────────────── */
+function openForm(id, prefillData) {
+  selectedFormType = FORM_TYPES.find(f => f.id === id);
+  if (!selectedFormType) return;
+  const f = selectedFormType;
+
+  document.getElementById('formTitle').textContent = f.name;
+  document.getElementById('formDept').innerHTML = `
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    ${f.dept}`;
+  document.getElementById('formSLA').innerHTML = `
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Typical response: ${f.sla}`;
+  document.getElementById('formInstructionsText').textContent = f.instructions;
+
+  document.getElementById('anonSection').style.display  = f.anon  ? 'block' : 'none';
+  document.getElementById('uploadSection').style.display = f.docs  ? 'block' : 'none';
+  uploadedFiles = [];
+  renderFileList();
+
+  const df = document.getElementById('dynamicFields');
+  df.innerHTML = '<h3>Request Details</h3>';
+  f.fields.forEach(field => {
+    const group = document.createElement('div');
+    group.className = 'form-group';
+    group.innerHTML = `<label>${field.label}${field.required ? ' <span class="req">*</span>' : ''}</label>` + renderField(field);
+    df.appendChild(group);
+  });
+
+  // Pre-fill if resubmit
+  if (prefillData) {
+    Object.entries(prefillData).forEach(([key, val]) => {
+      const el = document.getElementById(`f_${key}`);
+      if (el) el.value = val;
+    });
+  }
+
+  showView('form', null);
+}
+
+function renderField(f) {
+  if (f.type === 'select') {
+    return `<select id="f_${f.key}" ${f.required?'required':''}><option value="">— Select —</option>${f.options.map(o=>`<option>${o}</option>`).join('')}</select>`;
+  }
+  if (f.type === 'textarea') {
+    return `<textarea id="f_${f.key}" rows="4" placeholder="${f.placeholder||''}" ${f.required?'required':''}></textarea>`;
+  }
+  if (f.type === 'date') return `<input type="date" id="f_${f.key}" ${f.required?'required':''}>`;
+  return `<input type="${f.type||'text'}" id="f_${f.key}" placeholder="${f.placeholder||''}" ${f.required?'required':''}>`;
+}
+
+/* ─────────────────────────────────────────────────────
+   FILE UPLOAD
+───────────────────────────────────────────────────── */
+function triggerUpload() { document.getElementById('fileInput').click(); }
+
+function handleFiles(input) {
+  [...input.files].forEach(f => {
+    if (uploadedFiles.length >= 5) return;
+    if (f.size > 5 * 1024 * 1024) { alert(`${f.name} exceeds the 5MB limit.`); return; }
+    uploadedFiles.push(f);
+  });
+  renderFileList();
+  input.value = '';
+}
+
+function renderFileList() {
+  const list = document.getElementById('fileList');
+  if (!list) return;
+  list.innerHTML = uploadedFiles.map((f, i) => `
+    <div class="file-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span class="fname">${f.name}</span>
+      <span class="fsize">${(f.size/1024).toFixed(0)} KB</span>
+      <button class="fdel" onclick="removeFile(${i})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function removeFile(i) { uploadedFiles.splice(i, 1); renderFileList(); }
+
+/* ─────────────────────────────────────────────────────
+   SUBMIT / DRAFT
+───────────────────────────────────────────────────── */
+function submitForm(e) {
+  e.preventDefault();
+  if (!selectedFormType) return;
+
+  // Collect field values
+  const data = {};
+  selectedFormType.fields.forEach(f => {
+    const el = document.getElementById(`f_${f.key}`);
+    if (el) data[f.key] = el.value;
+  });
+
+  const refNum = 'DIU-2026-0' + (422 + SUBMISSIONS.length);
+
+  // Add to in-memory submissions
+  SUBMISSIONS.unshift({
+    id: refNum,
+    formId: selectedFormType.id,
+    formName: selectedFormType.name,
+    dept: selectedFormType.dept,
+    status: 'submitted',
+    submittedAt: new Date(),
+    adminNote: `Your request is in the ${selectedFormType.dept} queue. Expected response: ${selectedFormType.sla}.`,
+    data
+  });
+
+  // Add notification
+  NOTIFICATIONS.unshift({
+    id: Date.now(), type: 'info',
+    title: `Submitted — ${refNum}`,
+    body: `Your ${selectedFormType.name} request has been received.`,
+    time: 'Just now', read: false, submissionId: refNum
+  });
+  updateNotifDot();
+
+  document.getElementById('successRef').textContent = refNum;
+  showView('success', null);
+  resubmitData = null;
+}
+
+function saveDraft() {
+  if (!selectedFormType) return;
+  const data = {};
+  selectedFormType.fields.forEach(f => {
+    const el = document.getElementById(`f_${f.key}`);
+    if (el) data[f.key] = el.value;
+  });
+  const refNum = 'DRAFT-' + Date.now().toString().slice(-6);
+  SUBMISSIONS.unshift({
+    id: refNum,
+    formId: selectedFormType.id,
+    formName: selectedFormType.name,
+    dept: selectedFormType.dept,
+    status: 'draft',
+    submittedAt: new Date(),
+    adminNote: null, data
+  });
+  showView('my-submissions', null);
+}
+
+/* ─────────────────────────────────────────────────────
+   MY SUBMISSIONS
+───────────────────────────────────────────────────── */
+function setSubFilter(filter, el) {
+  subFilter = filter;
+  document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderSubmissions();
+}
+
+function renderSubmissions() {
+  const q = (document.getElementById('subSearch')?.value || '').toLowerCase();
+  let list = SUBMISSIONS.filter(s => {
+    const matchQ = !q || s.id.toLowerCase().includes(q) || s.formName.toLowerCase().includes(q);
+    const matchF = subFilter === 'all' || s.status === subFilter ||
+                   (subFilter === 'in_review' && ['submitted','in_review','routed'].includes(s.status));
+    return matchQ && matchF;
+  });
+
+  const container = document.getElementById('submissionsList');
+  if (!list.length) {
+    container.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
+      <p>No submissions found.</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(s => buildSubmissionCard(s)).join('');
+}
+
+function buildSubmissionCard(s) {
+  const steps = buildProgressSteps(s.status);
+
+  const bodyContent = (() => {
+    let html = `<div class="progress-track"><div class="progress-steps">${steps}</div></div>`;
+
+    if (s.status === 'action_required') {
+      html += `<div class="action-required-banner">
+        <strong>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          Action Required from You
+        </strong>
+        <p>The ${s.dept} has returned your request with a note:</p>
+        <div class="admin-quote">${s.adminNote || ''}</div>
+        ${s.resubmitDeadline ? `<p style="margin-top:8px;font-size:11px">Deadline to resubmit: <strong>${s.resubmitDeadline}</strong></p>` : ''}
+        <button class="btn-resubmit" onclick="resubmit('${s.id}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Resubmit Now
+        </button>
+      </div>`;
+    } else if (s.status === 'completed') {
+      html += `<div class="admin-note success"><strong>Certificate Ready</strong>${s.adminNote || ''}</div>`;
+      if (s.hasCertificate) {
+        html += `<div style="margin-top:12px">
+          <button class="btn btn-primary" style="font-size:12px;padding:8px 16px" onclick="downloadCert('${s.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Certificate
+          </button>
+        </div>`;
+      }
+    } else if (s.status === 'rejected') {
+      html += `<div class="admin-note danger"><strong>Rejection Reason</strong>${s.adminNote || ''}</div>`;
+    } else if (s.status === 'draft') {
+      html += `<div class="admin-note neutral"><strong>Draft — Not Submitted</strong>This form has been saved as a draft. Continue filling it out and submit when ready.</div>
+        <div style="margin-top:12px">
+          <button class="btn btn-primary" style="font-size:12px;padding:8px 16px" onclick="continueDraft('${s.id}')">Continue &amp; Submit</button>
+        </div>`;
+    } else {
+      html += `<div class="admin-note info"><strong>Processing</strong>${s.adminNote || 'Your request is being processed.'}</div>`;
+    }
+    return html;
+  })();
+
+  return `
+    <div class="submission-card">
+      <div class="sc-head" data-sub-id="${s.id}" onclick="toggleCard(this)">
+        <span class="sc-ref">${s.id}</span>
+        <div class="sc-form">${s.formName}</div>
+        <span class="status-badge s-${s.status}">${statusLabel(s.status)}</span>
+        <span class="sc-date">${timeAgo(s.submittedAt)}</span>
+        <svg class="sc-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="sc-body${s.status === 'action_required' ? ' open' : ''}">${bodyContent}</div>
+    </div>`;
+}
+
+function buildProgressSteps(status) {
+  const FLOW = [
+    { key: 'submitted', label: 'Submitted' },
+    { key: 'in_review',  label: 'In Review' },
+    { key: 'reviewed',   label: 'Decision' },
+    { key: 'completed',  label: 'Complete' },
+  ];
+  const statusOrder = { submitted:0, routed:0, in_review:1, action_required:1, escalated:1, approved:2, rejected:2, returned:1, completed:3 };
+  const currentIdx = statusOrder[status] ?? 0;
+  const isDone  = status === 'completed' || status === 'approved';
+  const isAlert = status === 'rejected';
+  const isWarn  = status === 'action_required' || status === 'returned';
+
+  return FLOW.map((step, i) => {
+    let dotClass = '', label = step.label, dotContent = '';
+    if (i < currentIdx || isDone) {
+      dotClass = 'done'; dotContent = checkSvg();
+    } else if (i === currentIdx) {
+      if (isAlert)      { dotClass = 'alert';   dotContent = xSvg(); label = status === 'rejected' ? 'Rejected' : step.label; }
+      else if (isWarn)  { dotClass = 'warning';  dotContent = warnSvg(); label = 'Returned'; }
+      else              { dotClass = 'current';  dotContent = `<div style="width:8px;height:8px;border-radius:50%;background:#fff"></div>`; }
+    } else {
+      dotContent = `<div style="width:8px;height:8px;border-radius:50%;background:var(--border)"></div>`;
+    }
+    const connClass = i < currentIdx || isDone ? 'done' : '';
+    return `
+      <div class="p-step">
+        <div class="p-dot ${dotClass}">${dotContent}</div>
+        <div class="p-label ${dotClass || (i === currentIdx ? (isAlert ? 'alert' : 'current') : '')}">${label}</div>
+      </div>
+      ${i < FLOW.length - 1 ? `<div class="p-connector ${connClass}"></div>` : ''}`;
+  }).join('');
+}
+
+function checkSvg() { return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`; }
+function xSvg()    { return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`; }
+function warnSvg() { return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>`; }
+
+function toggleCard(head) {
+  const body    = head.nextElementSibling;
+  const chevron = head.querySelector('.sc-chevron');
+  const isOpen  = body.classList.toggle('open');
+  head.classList.toggle('expanded', isOpen);
+  if (chevron) chevron.classList.toggle('open', isOpen);
+}
+
+function resubmit(id) {
+  const sub = SUBMISSIONS.find(s => s.id === id);
+  if (!sub) return;
+  resubmitData = sub.data;
+  openForm(sub.formId, sub.data);
+}
+
+function continueDraft(id) {
+  const sub = SUBMISSIONS.find(s => s.id === id);
+  if (!sub) return;
+  // Remove draft from list so resubmit creates a fresh one
+  SUBMISSIONS = SUBMISSIONS.filter(s => s.id !== id);
+  openForm(sub.formId, sub.data);
+}
+
+function downloadCert(id) {
+  // In the prototype, links to the sample PDF
+  window.open('sample_bonafide_certificate.pdf', '_blank');
+}
+
+/* ─────────────────────────────────────────────────────
+   NOTIFICATIONS
+───────────────────────────────────────────────────── */
+function toggleNotifications() {
+  document.getElementById('notifPanel').classList.toggle('open');
+}
+function closeNotifications() {
+  document.getElementById('notifPanel').classList.remove('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#notifBtn') && !e.target.closest('#notifPanel')) closeNotifications();
+});
+
+function updateNotifDot() {
+  const unread = NOTIFICATIONS.filter(n => !n.read).length;
+  document.getElementById('notifDot').style.display = unread ? 'block' : 'none';
+}
+
+function markAllRead() {
+  NOTIFICATIONS.forEach(n => n.read = true);
+  updateNotifDot();
+  renderNotifications();
+}
+
+function renderNotifications() {
+  const colors = { action: ['#fdf4ff','#7c3aed'], info: ['#eff6ff','#1d4ed8'], success: ['#f0fdf4','#16a34a'] };
+  const icons  = {
+    action: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>`,
+    info:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    success:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>`
+  };
+  const list = document.getElementById('notifList');
+  list.innerHTML = NOTIFICATIONS.slice(0,6).map(n => {
+    const [bg, color] = colors[n.type] || colors.info;
+    return `<div class="notif-item ${n.read ? '' : 'unread'}" onclick="clickNotif(${n.id})">
+      <div class="notif-icon-wrap" style="background:${bg};color:${color}">${icons[n.type] || icons.info}</div>
+      <div style="flex:1">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-body">${n.body}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+      ${!n.read ? `<div style="width:7px;height:7px;border-radius:50%;background:#1d4ed8;flex-shrink:0;margin-top:4px"></div>` : ''}
+    </div>`;
+  }).join('') + (NOTIFICATIONS.length === 0 ? `<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">No notifications</div>` : '');
+}
+
+function clickNotif(id) {
+  const n = NOTIFICATIONS.find(x => x.id === id);
+  if (n) { n.read = true; updateNotifDot(); renderNotifications(); }
+  if (n?.submissionId) { closeNotifications(); openSubmission(n.submissionId); }
+}
+
+/* ─────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────── */
+function timeAgo(date) {
+  const diff = Date.now() - date;
+  if (diff < 60000)    return 'just now';
+  if (diff < 3600000)  return Math.round(diff/60000) + 'm ago';
+  if (diff < 86400000) return Math.round(diff/3600000) + 'h ago';
+  return Math.round(diff/86400000) + ' days ago';
+}
+
+function statusLabel(s) {
+  return { submitted:'Submitted', routed:'Routed', in_review:'In Review', action_required:'Action Required',
+           escalated:'Escalated', approved:'Approved', rejected:'Rejected', completed:'Completed',
+           returned:'Returned', draft:'Draft' }[s] || s;
+}
+
+/* ─────────────────────────────────────────────────────
+   STUDENT NOTIFICATION SETTINGS
+───────────────────────────────────────────────────── */
+const SN_EVENTS = [
+  { group: 'Submission Updates',  key: 'confirmed',       label: 'Submission confirmed',            email: true,  sms: true,  inapp: true  },
+  { group: 'Submission Updates',  key: 'in_review',       label: 'Your form is being reviewed',     email: false, sms: false, inapp: true  },
+  { group: 'Submission Updates',  key: 'action_required', label: 'Action required from you',        email: true,  sms: true,  inapp: true  },
+  { group: 'Submission Updates',  key: 'returned',        label: 'Form returned for changes',       email: true,  sms: true,  inapp: true  },
+  { group: 'Submission Updates',  key: 'approved',        label: 'Submission approved',             email: true,  sms: true,  inapp: true  },
+  { group: 'Submission Updates',  key: 'rejected',        label: 'Submission rejected',             email: true,  sms: true,  inapp: true  },
+  { group: 'Documents',           key: 'cert_ready',      label: 'Certificate / document ready',   email: true,  sms: true,  inapp: true  },
+  { group: 'Documents',           key: 'admin_comment',   label: 'Admin added a comment',           email: true,  sms: false, inapp: true  },
+];
+
+// In-memory preferences (keyed by event key, channel)
+let SN_STATE = SN_EVENTS.map(e => ({ ...e }));
+
+// Channels where in-app cannot be disabled
+const SN_INAPP_LOCKED = ['confirmed','action_required','returned','approved','rejected','cert_ready'];
+
+function renderSnMatrix() {
+  const tbody = document.getElementById('snMatrixBody');
+  if (!tbody) return;
+  let lastGroup = null;
+  let html = '';
+  SN_STATE.forEach((ev, idx) => {
+    if (ev.group !== lastGroup) {
+      html += `<tr class="sn-section-head"><td colspan="4">${ev.group}</td></tr>`;
+      lastGroup = ev.group;
+    }
+    const inappLocked = SN_INAPP_LOCKED.includes(ev.key);
+    html += `<tr>
+      <td style="font-size:13px">${ev.label}</td>
+      ${['email','sms','inapp'].map(ch => {
+        const locked = ch === 'inapp' && inappLocked;
+        const checked = ev[ch];
+        return `<td class="sn-ch-cell">
+          <div class="sn-toggle-wrap">
+            <label class="toggle" title="${locked ? 'Cannot be disabled' : ''}">
+              <input type="checkbox" data-idx="${idx}" data-ch="${ch}" ${checked ? 'checked' : ''} ${locked ? 'disabled' : ''} onchange="updateSnPref(this)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </td>`;
+      }).join('')}
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+function updateSnPref(cb) {
+  const idx = +cb.dataset.idx;
+  const ch  = cb.dataset.ch;
+  SN_STATE[idx][ch] = cb.checked;
+  // If email/SMS toggled off, reflect in matrix without re-rendering entirely
+}
+
+function resetStudentNotifDefaults() {
+  SN_STATE = SN_EVENTS.map(e => ({ ...e }));
+  renderSnMatrix();
+  showSnToast('Preferences reset to defaults.');
+}
+
+function saveStudentNotifPrefs() {
+  // In production: PATCH /api/student/notification-preferences
+  showSnToast('Notification preferences saved.');
+}
+
+function savePhone() {
+  const val = document.getElementById('sn_phone').value.trim();
+  if (!val) { showSnToast('Please enter a valid mobile number.'); return; }
+  showSnToast('Mobile number updated.');
+}
+
+function toggleSnQuietHours() {
+  const enabled = document.getElementById('sn_quiet_enabled').checked;
+  document.getElementById('snQuietFields').style.display = enabled ? 'flex' : 'none';
+}
+
+function toggleGlobalEmail() {
+  const enabled = document.getElementById('sn_email_global').checked;
+  // Reflect in matrix: disable all email toggles if global email off
+  SN_STATE.forEach(ev => { if (!enabled) ev.email = false; });
+  renderSnMatrix();
+  if (!enabled) showSnToast('All email notifications unsubscribed.');
+}
+
+function showSnToast(msg) {
+  // Reuse existing toast if available, otherwise show a simple alert-style
+  const t = document.getElementById('snToast');
+  if (t) {
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+  } else {
+    // Fallback: use the same toast mechanism
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }
+}
+
+/* ─────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────── */
+renderFormList();
+refreshHome();
+renderNotifications();
+updateNotifDot();
+renderSnMatrix();
+</script>
+</body>
+</html>

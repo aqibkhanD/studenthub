@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIU Forms System — ERD</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+
+  .header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
+    padding: 24px 32px;
+    border-bottom: 1px solid #1e3a5f;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; color: #fff; }
+  .header p  { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+  .badge { display: inline-block; background: #2563eb; color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-left: 8px; vertical-align: middle; }
+
+  .legend {
+    display: flex; gap: 20px; padding: 12px 32px;
+    background: #151821; border-bottom: 1px solid #1e293b; flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #94a3b8; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+  .canvas-wrap { padding: 32px; overflow-x: auto; }
+  .canvas { display: grid; grid-template-columns: repeat(5, 260px); gap: 20px; min-width: 1380px; }
+
+  .table-card {
+    background: #1a1f2e;
+    border: 1px solid #2d3748;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    transition: box-shadow 0.2s;
+    break-inside: avoid;
+  }
+  .table-card:hover { box-shadow: 0 8px 32px rgba(37,99,235,0.25); border-color: #2563eb44; }
+
+  .table-header {
+    padding: 10px 14px;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .table-header .tname { display: flex; align-items: center; gap: 8px; }
+  .table-header .icon { font-size: 15px; }
+  .table-header .row-count { font-size: 10px; font-weight: 500; opacity: 0.7; }
+
+  /* Table type colors */
+  .core    .table-header { background: #1e3a5f; color: #60a5fa; }
+  .routing .table-header { background: #1c3b2a; color: #4ade80; }
+  .audit   .table-header { background: #2d1f3f; color: #c084fc; }
+  .notify  .table-header { background: #3b2a1a; color: #fb923c; }
+  .config  .table-header { background: #1e2d3b; color: #38bdf8; }
+
+  .field-list { padding: 4px 0; }
+  .field {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 14px; font-size: 11.5px;
+    border-bottom: 1px solid #1e293b22;
+    cursor: default;
+  }
+  .field:last-child { border-bottom: none; }
+  .field:hover { background: #ffffff06; }
+
+  .pk  { color: #fbbf24; font-weight: 700; }
+  .fk  { color: #60a5fa; font-weight: 600; }
+  .idx { color: #94a3b8; }
+  .field-name { flex: 1; }
+  .field-type { font-size: 10px; color: #64748b; font-family: monospace; }
+  .tag { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; }
+  .tag.pk-tag  { background: #78350f; color: #fbbf24; }
+  .tag.fk-tag  { background: #1e3a5f; color: #60a5fa; }
+  .tag.idx-tag { background: #1e293b; color: #64748b; }
+  .tag.nn-tag  { background: #1c2a1c; color: #4ade80; font-size: 8px; }
+  .tag.json-tag{ background: #2d1f1f; color: #f87171; }
+  .tag.enum-tag{ background: #2a1f2d; color: #c084fc; }
+
+  .divider { height: 1px; background: #1e293b; margin: 0; }
+  .section-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; color: #475569; padding: 4px 14px 2px; text-transform: uppercase; }
+
+  /* Relationship lines — SVG overlay approach via description box */
+  .rel-box {
+    background: #151821; border: 1px solid #1e293b; border-radius: 10px;
+    padding: 16px 20px; grid-column: span 5;
+  }
+  .rel-box h3 { font-size: 13px; font-weight: 700; color: #94a3b8; margin-bottom: 12px; }
+  .rel-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .rel-table th { text-align: left; color: #64748b; font-weight: 600; padding: 6px 12px; border-bottom: 1px solid #1e293b; }
+  .rel-table td { padding: 6px 12px; border-bottom: 1px solid #1e293b11; color: #cbd5e1; }
+  .rel-table tr:hover td { background: #ffffff05; }
+  .cardinality { color: #fb923c; font-weight: 700; font-family: monospace; font-size: 13px; }
+  .rel-from { color: #60a5fa; }
+  .rel-to   { color: #4ade80; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>DIU Student Services — Entity Relationship Diagram <span class="badge">v1.0</span></h1>
+  <p>15 tables · MySQL 8.0 · Form Tracking System Database Schema</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#1e3a5f;border:1px solid #60a5fa"></div> Core / Transaction</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1c3b2a;border:1px solid #4ade80"></div> Routing / Config</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#2d1f3f;border:1px solid #c084fc"></div> Audit / History</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3b2a1a;border:1px solid #fb923c"></div> Notifications</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1e2d3b;border:1px solid #38bdf8"></div> Configuration</div>
+  <div class="legend-item" style="margin-left:auto">
+    <span class="tag pk-tag">PK</span> Primary Key &nbsp;
+    <span class="tag fk-tag">FK</span> Foreign Key &nbsp;
+    <span class="tag idx-tag">IDX</span> Indexed
+  </div>
+</div>
+
+<div class="canvas-wrap">
+<div class="canvas">
+
+  <!-- ── USERS ── -->
+  <div class="table-card core">
+    <div class="table-header">
+      <div class="tname"><span class="icon">👤</span> users</div>
+      <span class="row-count">students · admins · super_admins</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag idx-tag">IDX</span><span class="field-name">student_id</span><span class="field-type">VARCHAR(20) NULL</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">name</span><span class="field-type">VARCHAR(150)</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">email</span><span class="field-type">VARCHAR(191) UNIQUE</span></div>
+      <div class="field"><span class="tag idx-tag">IDX</span><span class="field-name">phone</span><span class="field-type">VARCHAR(20) NULL</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">password</span><span class="field-type">VARCHAR(255)</span></div>
+      <div class="field"><span class="tag enum-tag">EN</span><span class="field-name">role</span><span class="field-type">student|admin|super_admin</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">department_id</span><span class="field-type">→ departments</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">program</span><span class="field-type">VARCHAR(100) NULL</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">batch / semester</span><span class="field-type">VARCHAR(20) NULL</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">is_active</span><span class="field-type">TINYINT(1) DEFAULT 1</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">created_at / updated_at</span><span class="field-type">TIMESTAMP</span></div>
+    </div>
+  </div>
+
+  <!-- ── DEPARTMENTS ── -->
+  <div class="table-card routing">
+    <div class="table-header">
+      <div class="tname"><span class="icon">🏢</span> departments</div>
+      <span class="row-count">10 dept seed rows</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">name</span><span class="field-type">VARCHAR(150)</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">slug</span><span class="field-type">VARCHAR(100) UNIQUE</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">email / phone</span><span class="field-type">VARCHAR NULL</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">head_user_id</span><span class="field-type">→ users</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">sla_hours</span><span class="field-type">SMALLINT DEFAULT 48</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">is_active</span><span class="field-type">TINYINT(1)</span></div>
+    </div>
+  </div>
+
+  <!-- ── FORM TYPES ── -->
+  <div class="table-card routing">
+    <div class="table-header">
+      <div class="tname"><span class="icon">📋</span> form_types</div>
+      <span class="row-count">15 types seeded</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">name / slug</span><span class="field-type">VARCHAR UNIQUE</span></div>
+      <div class="field"><span class="tag enum-tag">EN</span><span class="field-name">category</span><span class="field-type">7 categories</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">department_id</span><span class="field-type">→ departments</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">instructions</span><span class="field-type">TEXT NULL</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">requires_documents</span><span class="field-type">TINYINT(1)</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">allow_anonymous</span><span class="field-type">TINYINT(1)</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">auto_generate_doc</span><span class="field-type">TINYINT(1)</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">sla_hours</span><span class="field-type">SMALLINT NULL</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">sort_order / is_active</span><span class="field-type">SMALLINT / TINYINT</span></div>
+    </div>
+  </div>
+
+  <!-- ── FORM FIELDS ── -->
+  <div class="table-card config">
+    <div class="table-header">
+      <div class="tname"><span class="icon">🔧</span> form_fields</div>
+      <span class="row-count">dynamic fields per form</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">form_type_id</span><span class="field-type">→ form_types</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">label / field_key</span><span class="field-type">VARCHAR</span></div>
+      <div class="field"><span class="tag enum-tag">EN</span><span class="field-name">field_type</span><span class="field-type">text|select|file…</span></div>
+      <div class="field"><span class="tag json-tag">JS</span><span class="field-name">options</span><span class="field-type">JSON NULL</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">is_required / sort_order</span><span class="field-type">TINYINT / SMALLINT</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">validation_rules</span><span class="field-type">VARCHAR(500)</span></div>
+    </div>
+  </div>
+
+  <!-- ── WORKFLOWS ── -->
+  <div class="table-card config">
+    <div class="table-header">
+      <div class="tname"><span class="icon">🔀</span> workflows</div>
+      <span class="row-count">single|sequential|parallel</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">name</span><span class="field-type">VARCHAR(150)</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">form_type_id</span><span class="field-type">→ form_types (UNIQUE)</span></div>
+      <div class="field"><span class="tag enum-tag">EN</span><span class="field-name">type</span><span class="field-type">single|sequential|parallel</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">is_active</span><span class="field-type">TINYINT(1)</span></div>
+    </div>
+  </div>
+
+  <!-- ── WORKFLOW STEPS ── -->
+  <div class="table-card config">
+    <div class="table-header">
+      <div class="tname"><span class="icon">📌</span> workflow_steps</div>
+      <span class="row-count">ordered steps per workflow</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">workflow_id</span><span class="field-type">→ workflows</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">step_number</span><span class="field-type">TINYINT UNSIGNED</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">step_name</span><span class="field-type">VARCHAR(150)</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">department_id</span><span class="field-type">→ departments</span></div>
+      <div class="field"><span class="tag enum-tag">EN</span><span class="field-name">action_required</span><span class="field-type">approve|review|sign_off</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">sla_hours</span><span class="field-type">SMALLINT DEFAULT 48</span></div>
+    </div>
+  </div>
+
+  <!-- ── SUBMISSIONS ── -->
+  <div class="table-card core" style="grid-column: span 2;">
+    <div class="table-header">
+      <div class="tname"><span class="icon">📨</span> submissions</div>
+      <span class="row-count">⭐ CORE TABLE — every form submission</span>
+    </div>
+    <div class="field-list">
+      <div class="section-label">Identity</div>
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag idx-tag">IDX</span><span class="field-name">reference_no</span><span class="field-type">VARCHAR(30) UNIQUE — "DIU-2026-00421"</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">form_type_id</span><span class="field-type">→ form_types</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">student_id</span><span class="field-type">→ users (NULL if anonymous)</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">is_anonymous</span><span class="field-type">TINYINT(1)</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">department_id</span><span class="field-type">→ departments (routed to)</span></div>
+      <div class="divider"></div>
+      <div class="section-label">State Machine</div>
+      <div class="field"><span class="tag enum-tag">EN</span><span class="field-name">status</span><span class="field-type">draft|submitted|routed|in_review|action_required|escalated|approved|rejected|returned|completed|cancelled</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">current_step</span><span class="field-type">TINYINT DEFAULT 1</span></div>
+      <div class="divider"></div>
+      <div class="section-label">Content</div>
+      <div class="field"><span class="tag json-tag">JS</span><span class="field-name">form_data</span><span class="field-type">JSON — all field values</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">assigned_to</span><span class="field-type">→ users (admin)</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">internal_notes</span><span class="field-type">TEXT NULL</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">output_document</span><span class="field-type">VARCHAR(255) NULL</span></div>
+      <div class="divider"></div>
+      <div class="section-label">Timing</div>
+      <div class="field"><span class="tag idx-tag">IDX</span><span class="field-name">submitted_at</span><span class="field-type">TIMESTAMP NULL</span></div>
+      <div class="field"><span class="tag idx-tag">IDX</span><span class="field-name">sla_deadline</span><span class="field-type">TIMESTAMP NULL</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">escalated_at / resolved_at</span><span class="field-type">TIMESTAMP NULL</span></div>
+    </div>
+  </div>
+
+  <!-- ── STATUS HISTORY ── -->
+  <div class="table-card audit">
+    <div class="table-header">
+      <div class="tname"><span class="icon">🕒</span> submission_status_history</div>
+      <span class="row-count">immutable audit trail</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">submission_id</span><span class="field-type">→ submissions</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">changed_by</span><span class="field-type">→ users (NULL=system)</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">from_status</span><span class="field-type">VARCHAR(50) NULL</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">to_status</span><span class="field-type">VARCHAR(50)</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">comment</span><span class="field-type">TEXT NULL</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">is_visible_to_student</span><span class="field-type">TINYINT(1)</span></div>
+      <div class="field"><span class="tag idx-tag">IDX</span><span class="field-name">changed_at</span><span class="field-type">TIMESTAMP DEFAULT NOW()</span></div>
+    </div>
+  </div>
+
+  <!-- ── DOCUMENTS ── -->
+  <div class="table-card core">
+    <div class="table-header">
+      <div class="tname"><span class="icon">📎</span> submission_documents</div>
+      <span class="row-count">file uploads</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">submission_id</span><span class="field-type">→ submissions</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">uploaded_by</span><span class="field-type">→ users</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">file_name / file_path</span><span class="field-type">VARCHAR</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">file_size / mime_type</span><span class="field-type">INT / VARCHAR</span></div>
+      <div class="field"><span class="tag enum-tag">EN</span><span class="field-name">document_type</span><span class="field-type">student|admin|generated</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">is_public</span><span class="field-type">TINYINT(1)</span></div>
+    </div>
+  </div>
+
+  <!-- ── COMMENTS ── -->
+  <div class="table-card core">
+    <div class="table-header">
+      <div class="tname"><span class="icon">💬</span> submission_comments</div>
+      <span class="row-count">threaded discussion</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">submission_id</span><span class="field-type">→ submissions</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">user_id</span><span class="field-type">→ users (NULL=system)</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">body</span><span class="field-type">TEXT</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">is_internal</span><span class="field-type">TINYINT(1) — admin only</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">is_system</span><span class="field-type">TINYINT(1)</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">parent_id</span><span class="field-type">→ submission_comments</span></div>
+    </div>
+  </div>
+
+  <!-- ── APPROVAL RECORDS ── -->
+  <div class="table-card audit">
+    <div class="table-header">
+      <div class="tname"><span class="icon">✅</span> approval_records</div>
+      <span class="row-count">multi-step approver actions</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">submission_id</span><span class="field-type">→ submissions</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">workflow_step_id</span><span class="field-type">→ workflow_steps</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">approver_id</span><span class="field-type">→ users</span></div>
+      <div class="field"><span class="tag enum-tag">EN</span><span class="field-name">action</span><span class="field-type">pending|approved|rejected|skipped</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">comment / acted_at</span><span class="field-type">TEXT / TIMESTAMP</span></div>
+    </div>
+  </div>
+
+  <!-- ── NOTIFICATIONS ── -->
+  <div class="table-card notify">
+    <div class="table-header">
+      <div class="tname"><span class="icon">🔔</span> notifications</div>
+      <span class="row-count">in-app · SMS · email</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">user_id</span><span class="field-type">→ users</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">submission_id</span><span class="field-type">→ submissions</span></div>
+      <div class="field"><span class="tag enum-tag">EN</span><span class="field-name">channel</span><span class="field-type">in_app|sms|email</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">type</span><span class="field-type">VARCHAR — "submission.approved"</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">title / body</span><span class="field-type">VARCHAR / TEXT</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">phone_number</span><span class="field-type">VARCHAR(20) NULL</span></div>
+      <div class="field"><span class="tag idx-tag">IDX</span><span class="field-name">is_read / sent_at</span><span class="field-type">TINYINT / TIMESTAMP</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">failed_at / failure_reason</span><span class="field-type">TIMESTAMP / VARCHAR</span></div>
+    </div>
+  </div>
+
+  <!-- ── SLA ESCALATION RULES ── -->
+  <div class="table-card config">
+    <div class="table-header">
+      <div class="tname"><span class="icon">⏰</span> sla_escalation_rules</div>
+      <span class="row-count">auto-escalation config</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">department_id</span><span class="field-type">→ departments</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">form_type_id</span><span class="field-type">→ form_types (NULL=all)</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">escalate_after_hours</span><span class="field-type">SMALLINT UNSIGNED</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">escalate_to_user_id</span><span class="field-type">→ users (NULL=dept head)</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">notify_student</span><span class="field-type">TINYINT(1) DEFAULT 1</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">escalation_level</span><span class="field-type">TINYINT — 1st, 2nd…</span></div>
+    </div>
+  </div>
+
+  <!-- ── REFERENCE SEQUENCES ── -->
+  <div class="table-card config">
+    <div class="table-header">
+      <div class="tname"><span class="icon">🔢</span> reference_sequences</div>
+      <span class="row-count">DIU-YYYY-NNNNN counter</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">year</span><span class="field-type">SMALLINT UNIQUE</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">last_sequence</span><span class="field-type">INT DEFAULT 0</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">updated_at</span><span class="field-type">TIMESTAMP</span></div>
+    </div>
+  </div>
+
+  <!-- ── AUDIT LOGS ── -->
+  <div class="table-card audit">
+    <div class="table-header">
+      <div class="tname"><span class="icon">📓</span> audit_logs</div>
+      <span class="row-count">system-wide change log</span>
+    </div>
+    <div class="field-list">
+      <div class="field"><span class="tag pk-tag">PK</span><span class="field-name pk">id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag fk-tag">FK</span><span class="field-name fk">user_id</span><span class="field-type">→ users (NULL=system)</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">action</span><span class="field-type">VARCHAR — "submission.created"</span></div>
+      <div class="field"><span class="tag nn-tag">NN</span><span class="field-name">auditable_type</span><span class="field-type">VARCHAR — model name</span></div>
+      <div class="field"><span class="tag idx-tag">IDX</span><span class="field-name">auditable_id</span><span class="field-type">BIGINT UNSIGNED</span></div>
+      <div class="field"><span class="tag json-tag">JS</span><span class="field-name">old_values / new_values</span><span class="field-type">JSON NULL</span></div>
+      <div class="field"><span class="tag idx-tag">   </span><span class="field-name">ip_address / user_agent</span><span class="field-type">VARCHAR NULL</span></div>
+      <div class="field"><span class="tag idx-tag">IDX</span><span class="field-name">created_at</span><span class="field-type">TIMESTAMP</span></div>
+    </div>
+  </div>
+
+  <!-- ── RELATIONSHIPS TABLE ── -->
+  <div class="rel-box">
+    <h3>🔗 Key Relationships &amp; Cardinality</h3>
+    <table class="rel-table">
+      <thead>
+        <tr>
+          <th>From Table</th><th>Cardinality</th><th>To Table</th><th>Via Column</th><th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="rel-from">users</td><td class="cardinality">N : 1</td><td class="rel-to">departments</td><td>users.department_id</td><td>Admin belongs to one department</td></tr>
+        <tr><td class="rel-from">form_types</td><td class="cardinality">N : 1</td><td class="rel-to">departments</td><td>form_types.department_id</td><td>Default routing destination</td></tr>
+        <tr><td class="rel-from">form_fields</td><td class="cardinality">N : 1</td><td class="rel-to">form_types</td><td>form_fields.form_type_id</td><td>Dynamic fields per form type</td></tr>
+        <tr><td class="rel-from">workflows</td><td class="cardinality">1 : 1</td><td class="rel-to">form_types</td><td>workflows.form_type_id</td><td>One workflow per form type (or shared)</td></tr>
+        <tr><td class="rel-from">workflow_steps</td><td class="cardinality">N : 1</td><td class="rel-to">workflows</td><td>workflow_steps.workflow_id</td><td>Ordered steps, unique per workflow</td></tr>
+        <tr><td class="rel-from">submissions</td><td class="cardinality">N : 1</td><td class="rel-to">form_types</td><td>submissions.form_type_id</td><td>What kind of form was submitted</td></tr>
+        <tr><td class="rel-from">submissions</td><td class="cardinality">N : 1</td><td class="rel-to">users (student)</td><td>submissions.student_id</td><td>NULL for anonymous complaints</td></tr>
+        <tr><td class="rel-from">submissions</td><td class="cardinality">N : 1</td><td class="rel-to">departments</td><td>submissions.department_id</td><td>Routed destination</td></tr>
+        <tr><td class="rel-from">submissions</td><td class="cardinality">N : 1</td><td class="rel-to">users (admin)</td><td>submissions.assigned_to</td><td>Admin handling this submission</td></tr>
+        <tr><td class="rel-from">submission_status_history</td><td class="cardinality">N : 1</td><td class="rel-to">submissions</td><td>submission_id</td><td>Append-only audit trail</td></tr>
+        <tr><td class="rel-from">submission_documents</td><td class="cardinality">N : 1</td><td class="rel-to">submissions</td><td>submission_id</td><td>Student &amp; admin uploads</td></tr>
+        <tr><td class="rel-from">submission_comments</td><td class="cardinality">N : 1</td><td class="rel-to">submissions</td><td>submission_id</td><td>Threaded; parent_id for replies</td></tr>
+        <tr><td class="rel-from">approval_records</td><td class="cardinality">N : 1</td><td class="rel-to">submissions</td><td>submission_id</td><td>One record per step per submission</td></tr>
+        <tr><td class="rel-from">approval_records</td><td class="cardinality">N : 1</td><td class="rel-to">workflow_steps</td><td>workflow_step_id</td><td>Links action to specific step</td></tr>
+        <tr><td class="rel-from">notifications</td><td class="cardinality">N : 1</td><td class="rel-to">submissions</td><td>submission_id</td><td>All notifications tied to a submission</td></tr>
+        <tr><td class="rel-from">sla_escalation_rules</td><td class="cardinality">N : 1</td><td class="rel-to">departments</td><td>department_id</td><td>Per-department escalation config</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- STATUS FLOW -->
+  <div class="rel-box" style="grid-column: span 5;">
+    <h3>⚡ Submission Status State Machine</h3>
+    <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;margin-top:8px;">
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:8px 14px;font-size:12px;color:#94a3b8">📝 draft</div>
+      <div style="color:#475569;padding:0 8px;font-size:18px">→</div>
+      <div style="background:#1e3a5f;border:1px solid #2563eb;border-radius:8px;padding:8px 14px;font-size:12px;color:#60a5fa">📤 submitted</div>
+      <div style="color:#475569;padding:0 8px;font-size:18px">→</div>
+      <div style="background:#1c3b2a;border:1px solid #16a34a;border-radius:8px;padding:8px 14px;font-size:12px;color:#4ade80">📡 routed</div>
+      <div style="color:#475569;padding:0 8px;font-size:18px">→</div>
+      <div style="background:#2d2a1e;border:1px solid #ca8a04;border-radius:8px;padding:8px 14px;font-size:12px;color:#fbbf24">👀 in_review</div>
+      <div style="color:#475569;padding:0 8px;font-size:18px">→</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="background:#1c3b2a;border:1px solid #16a34a;border-radius:8px;padding:6px 12px;font-size:12px;color:#4ade80">✅ approved → completed</div>
+        <div style="background:#3b1e1e;border:1px solid #dc2626;border-radius:8px;padding:6px 12px;font-size:12px;color:#f87171">❌ rejected (terminal)</div>
+        <div style="background:#2d1f3f;border:1px solid #7c3aed;border-radius:8px;padding:6px 12px;font-size:12px;color:#c084fc">↩️ returned → action_required → re-submitted</div>
+        <div style="background:#3b2a1a;border:1px solid #ea580c;border-radius:8px;padding:6px 12px;font-size:12px;color:#fb923c">🚨 escalated (SLA breach)</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /canvas -->
+</div><!-- /canvas-wrap -->
+
+</body>
+</html>
