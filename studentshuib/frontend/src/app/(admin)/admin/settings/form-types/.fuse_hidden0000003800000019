@@ -71,11 +71,11 @@ export default function FormTypesSettingsPage() {
   const showApiError = (err: unknown, fallback: string) => {
     const data = (err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } })?.response?.data;
     if (data?.errors) {
-      toast(Object.values(data.errors).flat().join(' '), 'error');
+      toast({ title: Object.values(data.errors).flat().join(' '), variant: 'error' });
     } else if (data?.message) {
-      toast(data.message, 'error');
+      toast({ title: data.message, variant: 'error' });
     } else {
-      toast(fallback, 'error');
+      toast({ title: fallback, variant: 'error' });
     }
   };
 
@@ -84,7 +84,7 @@ export default function FormTypesSettingsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['form-types-admin'] });
       setShowForm(false); setForm(EMPTY);
-      toast('Form type created', 'success');
+      toast({ title: 'Form type created', variant: 'success' });
     },
     onError: (err) => showApiError(err, 'Failed to create form type'),
   });
@@ -95,7 +95,7 @@ export default function FormTypesSettingsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['form-types-admin'] });
       setEditId(null);
-      toast('Form type updated', 'success');
+      toast({ title: 'Form type updated', variant: 'success' });
     },
     onError: (err) => showApiError(err, 'Failed to update form type'),
   });
@@ -103,7 +103,7 @@ export default function FormTypesSettingsPage() {
   const toggleMut = useMutation({
     mutationFn: (id: number) => superApi.toggleFormType(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['form-types-admin'] }),
-    onError:   () => toast('Failed to toggle', 'error'),
+    onError:   () => toast({ title: 'Failed to toggle', variant: 'error' }),
   });
 
   const startEdit = (ft: FormType) => {

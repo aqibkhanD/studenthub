@@ -65,7 +65,7 @@ export default function ResubmitPage() {
     if (!submission) return;
     const editable: Submission['status'][] = ['returned', 'action_required', 'draft'];
     if (!editable.includes(submission.status)) {
-      toast('This submission cannot be edited from its current status.', 'error');
+      toast({ title: 'This submission cannot be edited from its current status.', variant: 'error' });
       router.replace(`/submissions/${ref}`);
     }
   }, [submission, ref, router, toast]);
@@ -116,18 +116,21 @@ export default function ResubmitPage() {
           try {
             await studentApi.uploadDocument(ref, fd);
           } catch {
-            toast(`Could not upload "${field.label}". You can attach it later from the submission page.`, 'error');
+            toast({
+              title: `Could not upload "${field.label}". You can attach it later from the submission page.`,
+              variant: 'error',
+            });
           }
         }
       }
 
       setSubmitState('done');
-      toast('Submission updated and resent.', 'success');
+      toast({ title: 'Submission updated and resent.', variant: 'success' });
       router.push(`/submissions/${ref}`);
     } catch (err: unknown) {
       setSubmitState('idle');
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast(msg || 'Resubmit failed. Please try again.', 'error');
+      toast({ title: msg || 'Resubmit failed. Please try again.', variant: 'error' });
     }
   };
 

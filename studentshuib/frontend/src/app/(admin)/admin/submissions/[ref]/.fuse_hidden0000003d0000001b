@@ -134,9 +134,9 @@ export default function AdminSubmissionDetailPage() {
       qc.invalidateQueries({ queryKey: ['admin-submission', ref] });
       qc.invalidateQueries({ queryKey: ['admin-submissions'] });
       setActiveAction(null);
-      toast('Status updated', 'success');
+      toast({ title: 'Status updated', variant: 'success' });
     },
-    onError: () => toast('Failed to update status', 'error'),
+    onError: () => toast({ title: 'Failed to update status', variant: 'error' }),
   });
 
   /* Add comment */
@@ -145,9 +145,9 @@ export default function AdminSubmissionDetailPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-submission', ref] });
       setNewComment('');
-      toast('Comment added', 'success');
+      toast({ title: 'Comment added', variant: 'success' });
     },
-    onError: () => toast('Failed to add comment', 'error'),
+    onError: () => toast({ title: 'Failed to add comment', variant: 'error' }),
   });
 
   /* Assign */
@@ -155,9 +155,9 @@ export default function AdminSubmissionDetailPage() {
     mutationFn: (userId: number) => adminApi.assign(ref, userId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-submission', ref] });
-      toast('Submission assigned', 'success');
+      toast({ title: 'Submission assigned', variant: 'success' });
     },
-    onError: () => toast('Failed to assign', 'error'),
+    onError: () => toast({ title: 'Failed to assign', variant: 'error' }),
   });
 
   /* Upload document */
@@ -171,9 +171,9 @@ export default function AdminSubmissionDetailPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-submission', ref] });
       setUploadFile(null);
-      toast('Document uploaded', 'success');
+      toast({ title: 'Document uploaded', variant: 'success' });
     },
-    onError: () => toast('Upload failed', 'error'),
+    onError: () => toast({ title: 'Upload failed', variant: 'error' }),
   });
 
   /* Action handler */

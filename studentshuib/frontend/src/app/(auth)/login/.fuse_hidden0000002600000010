@@ -35,7 +35,7 @@ export default function LoginPage() {
       }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast(msg || 'Login failed. Please check your credentials.', 'error');
+      toast({ title: msg || 'Login failed. Please check your credentials.', variant: 'error' });
     } finally {
       setLoading(false);
     }
