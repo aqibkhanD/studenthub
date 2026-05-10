@@ -193,6 +193,11 @@ export interface DashboardStats {
   escalated:                 number;
   avg_resolution_days:       number | null;
 
+  // Leadership KPIs
+  sla_compliance_pct:     number | null;
+  anonymous_in_period:    number;
+  new_students_in_period: number;
+
   // Status breakdown
   status_counts:  Partial<Record<SubmissionStatus, number>>;
   total_active:   number;
@@ -219,6 +224,17 @@ export interface DashboardStats {
     comment:      string | null;
     changed_at:   string;
     changed_by:   string | null;
+  }[];
+
+  // Needs attention — escalated + most overdue, deep-link list
+  needs_attention: {
+    reference_no:  string;
+    form_type:     string | null;
+    department:    string | null;
+    status:        SubmissionStatus;
+    assigned_to:   string | null;
+    sla_deadline:  string | null;
+    hours_overdue: number | null;
   }[];
 
   // Legacy fields (still returned for backwards compat)

@@ -57,6 +57,37 @@ class DashboardController extends Controller
             ->selectRaw("avg(extract(epoch from (resolved_at - submitted_at)) / 86400) as avg_days")
             ->value('avg_days');
 
+        // SLA compliance — of submissions resolved in the period, what % were
+        // resolved on or before their deadline. The headline service-quality
+        // KPI for leadership.
+        $resolvedInPeriod = (clone $base)
+            ->whereIn('status', ['approved', 'completed'])
+            ->whereBetween('resolved_at', [$periodStart, $periodEnd])
+            ->whereNotNull('sla_deadline')
+            ->count();
+        $resolvedOnTime = (clone $base)
+            ->whereIn('status', ['approved', 'completed'])
+            ->whereBetween('resolved_at', [$periodStart, $periodEnd])
+            ->whereNotNull('sla_deadline')
+            ->whereColumn('resolved_at', '<=', 'sla_deadline')
+            ->count();
+        $slaCompliancePct = $resolvedInPeriod > 0
+            ? round(($resolvedOnTime / $resolvedInPeriod) * 100, 1)
+            : null;
+
+        // Anonymous submissions in the period — leadership signal. A sudden
+        // spike often correlates with a trust/grievance event.
+        $anonymousInPeriod = (clone $base)
+            ->where('is_anonymous', true)
+            ->whereBetween('submitted_at', [$periodStart, $periodEnd])
+            ->count();
+
+        // New student registrations in the period — capacity-planning metric.
+        // Always system-wide (not dept-scoped) since student accounts have no department.
+        $newStudentsInPeriod = User::where('role', 'student')
+            ->whereBetween('created_at', [$periodStart, $periodEnd])
+            ->count();
+
         // ── Snapshot metrics (current state, period-independent) ─────────
         $statusCounts = (clone $base)
             ->selectRaw('status, count(*) as count')
@@ -102,6 +133,34 @@ class DashboardController extends Controller
                     'breached_count' => (int)$d->breached_count,
                 ])
             : null;
+
+        // ── Needs attention — escalated + most overdue, max 8 items ───────
+        // What leadership should ACT on right now: escalated cases first,
+        // then the most overdue active submissions. Deep-links to detail.
+        $needsAttention = (clone $base)
+            ->where(function ($q) {
+                $q->where('status', 'escalated')
+                  ->orWhere(function ($q2) {
+                      $q2->whereNotIn('status', ['approved','rejected','completed','cancelled'])
+                         ->where('sla_deadline', '<', now());
+                  });
+            })
+            ->with(['formType:id,name', 'department:id,name', 'assignedTo:id,name'])
+            ->orderByRaw("CASE WHEN status = 'escalated' THEN 0 ELSE 1 END")
+            ->orderBy('sla_deadline')
+            ->limit(8)
+            ->get()
+            ->map(fn($s) => [
+                'reference_no'  => $s->reference_no,
+                'form_type'     => $s->formType?->name,
+                'department'    => $s->department?->name,
+                'status'        => $s->status,
+                'assigned_to'   => $s->assignedTo?->name,
+                'sla_deadline'  => $s->sla_deadline?->toIso8601String(),
+                'hours_overdue' => $s->sla_deadline && $s->sla_deadline < now()
+                    ? round(now()->diffInHours($s->sla_deadline, false) * -1, 1)
+                    : null,
+            ]);
 
         // ── Recent activity (last 10 status changes) ──────────────────────
         $recentActivity = SubmissionStatusHistory::with([
@@ -161,6 +220,11 @@ class DashboardController extends Controller
             'escalated'                 => $escalated,
             'avg_resolution_days'       => $avgResolutionDays !== null ? round((float)$avgResolutionDays, 1) : null,
 
+            // Headline KPIs (leadership view)
+            'sla_compliance_pct'    => $slaCompliancePct,
+            'anonymous_in_period'   => $anonymousInPeriod,
+            'new_students_in_period'=> $newStudentsInPeriod,
+
             // Status breakdown
             'status_counts'  => $statusCounts,
             'total_active'   => $totalActive,
@@ -170,9 +234,10 @@ class DashboardController extends Controller
             'submission_volume' => $volume,
             'volume_peak'       => $volumePeak,
 
-            // Department performance + recent activity
+            // Department performance + recent activity + leadership signals
             'departments'     => $departments,
             'recent_activity' => $recentActivity,
+            'needs_attention' => $needsAttention,
 
             // Existing fields (legacy callers)
             'sla_breached'   => $overdue,
