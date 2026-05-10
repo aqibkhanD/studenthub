@@ -87,7 +87,15 @@ class UserController extends Controller
         return response()->json(['user' => $user->fresh('department:id,name')]);
     }
 
-    // DELETE /api/v1/super/users/{id}
+    // DELETE /api/v1/super/users/{id}  — hard delete with FK guard.
+    //
+    // Per-row destroy refuses if the user is referenced by submissions
+    // (as student or assignee) so we never silently destroy submission
+    // history. Audit/notification rows have ON DELETE SET NULL on user_id,
+    // so those rows survive (anonymized) when the user is removed.
+    //
+    // For a "soft" deactivate that preserves the row, use the
+    // `toggle-active` endpoint instead — exposed as a separate button in the UI.
     public function destroy(Request $request, int $id): JsonResponse
     {
         if ($id === $request->user()->id) {
@@ -95,10 +103,35 @@ class UserController extends Controller
         }
 
         $user = User::findOrFail($id);
-        $user->update(['is_active' => false]); // soft-deactivate, not hard delete
-        $this->audit->log($request->user()->id, 'user.deactivated', 'User', $id);
 
-        return response()->json(['message' => 'User deactivated.']);
+        // FK guard — refuse hard delete if user has submissions on record
+        $studentSubmissions  = \App\Models\Submission::where('student_id', $id)->count();
+        $assignedSubmissions = \App\Models\Submission::where('assigned_to', $id)->count();
+
+        if ($studentSubmissions > 0) {
+            return response()->json([
+                'message' => "Cannot delete: this user has {$studentSubmissions} submission(s) on record. Deactivate the account instead to preserve history.",
+            ], 422);
+        }
+
+        // Unassign any open work this user owns so we don't strand it
+        if ($assignedSubmissions > 0) {
+            \App\Models\Submission::where('assigned_to', $id)->update(['assigned_to' => null]);
+        }
+
+        // Audit BEFORE delete so we still have a reference to the user details
+        $this->audit->log(
+            $request->user()->id,
+            'user.deleted',
+            'User',
+            $id,
+            ['name' => $user->name, 'email' => $user->email, 'role' => $user->role],
+            null
+        );
+
+        $user->delete();
+
+        return response()->json(['message' => 'User permanently deleted.']);
     }
 
     // GET /api/v1/admin/staff  — staff list for assignment dropdown

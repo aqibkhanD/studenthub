@@ -4,57 +4,103 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { superApi } from '@/lib/api';
 import { Card, Button, Input, Spinner, EmptyState, useToast } from '@/components/ui';
 import type { Department } from '@/types';
-import { Building2, Plus, Pencil, X, Check } from 'lucide-react';
+import { Building2, Plus, Pencil, Trash2 } from 'lucide-react';
 
-type DeptForm = { name: string; code: string; sla_hours: string; email: string };
-const EMPTY: DeptForm = { name: '', code: '', sla_hours: '72', email: '' };
+type DeptForm = { name: string; code: string; sla_hours: string; email: string; slug: string };
+const EMPTY: DeptForm = { name: '', code: '', sla_hours: '72', email: '', slug: '' };
+
+// Auto-generate URL-safe slug from a department name. The DB requires a slug
+// and an earlier bug let admins create departments without one (silent 422).
+const toSlug = (name: string) =>
+  name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 export default function DepartmentsSettingsPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
 
-  const [showForm, setShowForm] = useState(false);
-  const [editId,   setEditId]   = useState<number | null>(null);
-  const [form,     setForm]     = useState<DeptForm>(EMPTY);
+  const [showForm,   setShowForm]   = useState(false);
+  const [editId,     setEditId]     = useState<number | null>(null);
+  const [form,       setForm]       = useState<DeptForm>(EMPTY);
+  const [confirmDel, setConfirmDel] = useState<number | null>(null);
 
+  // Backend returns { departments: [...] } — keyed object, not paginated.
   const { data: depts, isLoading } = useQuery({
     queryKey: ['departments'],
     queryFn:  () => superApi.departments(),
-    select:   (res) => res.data as Department[],
+    select:   (res) => ((res.data as { departments?: Department[] })?.departments ?? []) as Department[],
   });
 
+  // Send slug along with every create/update — backend requires it. Convert
+  // empty SLA hours to null so Laravel's `nullable|integer` rule passes
+  // (it rejects "" because the empty string is not null).
+  const toPayload = (f: DeptForm) => ({
+    name:      f.name,
+    code:      f.code || null,
+    email:     f.email || null,
+    sla_hours: f.sla_hours === '' ? null : Number(f.sla_hours),
+    slug:      f.slug || toSlug(f.name),
+  });
+
+  const showApiError = (err: unknown, fallback: string) => {
+    const data = (err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } })?.response?.data;
+    if (data?.errors) {
+      toast({ title: Object.values(data.errors).flat().join(' '), variant: 'error' });
+    } else if (data?.message) {
+      toast({ title: data.message, variant: 'error' });
+    } else {
+      toast({ title: fallback, variant: 'error' });
+    }
+  };
+
   const createMut = useMutation({
-    mutationFn: (data: DeptForm) => superApi.createDepartment(data),
+    mutationFn: (data: DeptForm) => superApi.createDepartment(toPayload(data)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['departments'] });
       setShowForm(false);
       setForm(EMPTY);
       toast({ title: 'Department created', variant: 'success' });
     },
-    onError: () => toast({ title: 'Failed to create department', variant: 'error' }),
+    onError: (err) => showApiError(err, 'Failed to create department'),
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: DeptForm }) => superApi.updateDepartment(id, data),
+    mutationFn: ({ id, data }: { id: number; data: DeptForm }) =>
+      superApi.updateDepartment(id, toPayload(data)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['departments'] });
       setEditId(null);
       toast({ title: 'Department updated', variant: 'success' });
     },
-    onError: () => toast({ title: 'Failed to update', variant: 'error' }),
+    onError: (err) => showApiError(err, 'Failed to update department'),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id: number) => superApi.deleteDepartment(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['departments'] });
+      setConfirmDel(null);
+      toast({ title: 'Department deleted', variant: 'success' });
+    },
+    onError: (err) => {
+      showApiError(err, 'Failed to delete department');
+      setConfirmDel(null);
+    },
   });
 
   const startEdit = (d: Department) => {
     setEditId(d.id);
-    setForm({ name: d.name, code: d.code ?? '', sla_hours: String(d.sla_hours ?? 72), email: d.email ?? '' });
+    setForm({
+      name: d.name,
+      code: d.code ?? '',
+      sla_hours: String(d.sla_hours ?? 72),
+      email: d.email ?? '',
+      slug: d.slug ?? '',
+    });
   };
 
   const handleSubmit = () => {
-    if (editId) {
-      updateMut.mutate({ id: editId, data: form });
-    } else {
-      createMut.mutate(form);
-    }
+    if (editId) updateMut.mutate({ id: editId, data: form });
+    else        createMut.mutate(form);
   };
 
   return (
@@ -66,7 +112,7 @@ export default function DepartmentsSettingsPage() {
         </Button>
       </div>
 
-      {/* Add form */}
+      {/* Add / edit form */}
       {(showForm || editId !== null) && (
         <Card>
           <div className="px-6 py-4 border-b border-gray-100">
@@ -120,10 +166,33 @@ export default function DepartmentsSettingsPage() {
                   <div className="md:col-span-2 text-sm text-gray-500 font-mono">{d.code ?? '—'}</div>
                   <div className="md:col-span-2 text-sm text-gray-500">{d.sla_hours ?? 72}h</div>
                   <div className="md:col-span-3 text-sm text-gray-500 truncate">{d.email ?? '—'}</div>
-                  <div className="md:col-span-1 flex justify-end">
-                    <button onClick={() => startEdit(d)} className="text-gray-400 hover:text-brand-500">
-                      <Pencil className="w-4 h-4" />
-                    </button>
+                  <div className="md:col-span-1 flex justify-end items-center gap-2">
+                    {confirmDel === d.id ? (
+                      <>
+                        <button
+                          onClick={() => deleteMut.mutate(d.id)}
+                          disabled={deleteMut.isPending}
+                          className="text-xs font-medium text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded disabled:opacity-50"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => setConfirmDel(null)}
+                          className="text-xs font-medium text-gray-500 hover:text-gray-700 px-2 py-1 rounded"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => startEdit(d)} className="text-gray-400 hover:text-brand-500" title="Edit">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => setConfirmDel(d.id)} className="text-gray-400 hover:text-red-500" title="Delete">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </li>
               ))}

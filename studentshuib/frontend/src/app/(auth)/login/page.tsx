@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Button, Input, useToast } from '@/components/ui';
 import type { User } from '@/types';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface LoginForm { email: string; password: string; }
 
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const setAuth  = useAuthStore((s) => s.setAuth);
   const { toast }= useToast();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
 
@@ -24,15 +26,16 @@ export default function LoginPage() {
       const res   = await authApi.login(data.email, data.password);
       const { token, user } = res.data as { token: string; user: User };
       setAuth(user, token);
-      // Route by role
+      // Route by role. Student URLs do NOT have /student/ prefix
+      // (route group `(student)` is invisible).
       if (['admin', 'dept_head', 'super_admin', 'management'].includes(user.role)) {
         router.push('/admin/dashboard');
       } else {
-        router.push('/student/dashboard');
+        router.push('/dashboard');
       }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast(msg || 'Login failed. Please check your credentials.', 'error');
+      toast({ title: msg || 'Login failed. Please check your credentials.', variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -54,24 +57,54 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Sign in to your account</h2>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            // Explicit Enter handler — some autofill plugins / hydration timing
+            // edge cases swallow the browser's implicit form submission on Enter.
+            // Forcing it here guarantees the form submits regardless.
+            onKeyDown={(e) => {
+              if (e.key !== 'Enter' || e.shiftKey || e.repeat) return;
+              const tag = (e.target as HTMLElement).tagName;
+              if (tag === 'BUTTON' || tag === 'TEXTAREA' || tag === 'A') return;
+              e.preventDefault();
+              handleSubmit(onSubmit)();
+            }}
+            className="space-y-4"
+          >
             <Input
               label="Email address"
               type="email"
               placeholder="you@diu.edu.bd"
               required
+              autoComplete="email"
               error={errors.email?.message}
               {...register('email', { required: 'Email is required' })}
             />
+
+            {/* Password field with visibility toggle */}
             <div>
-              <Input
-                label="Password"
-                type="password"
-                placeholder="••••••••"
-                required
-                error={errors.password?.message}
-                {...register('password', { required: 'Password is required' })}
-              />
+              <div className="relative">
+                <Input
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  required
+                  autoComplete="current-password"
+                  className="pr-10"
+                  error={errors.password?.message}
+                  {...register('password', { required: 'Password is required' })}
+                />
+                {/* Eye toggle — sits over the input. Top offset accounts for the label height. */}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-[33px] text-gray-400 hover:text-gray-600"
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               <div className="mt-1.5 text-right">
                 <Link href="/forgot-password" className="text-xs text-brand-500 hover:underline">
                   Forgot password?

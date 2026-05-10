@@ -24,6 +24,12 @@ const STATUS_OPTS = [
   { value: 'completed',       label: 'Completed' },
 ];
 
+const ASSIGNED_OPTS = [
+  { value: '',  label: 'Any assignment' },
+  { value: '0', label: 'Unassigned only' },
+  { value: '1', label: 'Assigned only' },
+];
+
 const BULK_STATUS_OPTS = [
   { value: 'in_review',       label: 'Move to In Review' },
   { value: 'action_required', label: 'Requires Action' },
@@ -42,10 +48,12 @@ function AdminInboxContent() {
   const queryClient   = useQueryClient();
 
   // Filters
-  const [status, setStatus]   = useState(searchParams.get('status') ?? '');
-  const [search, setSearch]   = useState('');
-  const [slaBreached, setSla] = useState(searchParams.get('sla_breached') === '1');
-  const [page, setPage]       = useState(1);
+  const [status, setStatus]     = useState(searchParams.get('status') ?? '');
+  const [search, setSearch]     = useState('');
+  const [slaBreached, setSla]   = useState(searchParams.get('sla_breached') === '1');
+  // assigned: '' = any, '0' = unassigned only, '1' = assigned only
+  const [assigned, setAssigned] = useState(searchParams.get('assigned') ?? '');
+  const [page, setPage]         = useState(1);
 
   // Bulk selection
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -57,14 +65,15 @@ function AdminInboxContent() {
   // CSV export loading
   const [exporting, setExporting] = useState(false);
 
-  useEffect(() => { setPage(1); setSelected(new Set()); }, [status, search, slaBreached]);
+  useEffect(() => { setPage(1); setSelected(new Set()); }, [status, search, slaBreached, assigned]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-submissions', status, search, slaBreached, page],
+    queryKey: ['admin-submissions', status, search, slaBreached, assigned, page],
     queryFn:  () => adminApi.submissions({
       status:      status || undefined,
       search:      search || undefined,
       sla_breached:slaBreached ? 1 : undefined,
+      assigned:    assigned !== '' ? assigned : undefined,
       page,
     }),
     select: (res) => res.data as PaginatedResponse<Submission>,
@@ -138,6 +147,7 @@ function AdminInboxContent() {
         status:      status || undefined,
         search:      search || undefined,
         sla_breached:slaBreached ? 1 : undefined,
+        assigned:    assigned !== '' ? assigned : undefined,
       });
       // Create blob download
       const url  = window.URL.createObjectURL(new Blob([res.data], { type: 'text/csv;charset=utf-8;' }));
@@ -160,7 +170,7 @@ function AdminInboxContent() {
   return (
     <div className="p-6 space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-xl font-bold text-gray-900">Submissions Inbox</h1>
+        <h1 className="text-xl font-bold text-gray-900">Submission Queue</h1>
         <button
           onClick={handleExport}
           disabled={exporting}
@@ -184,6 +194,9 @@ function AdminInboxContent() {
         </div>
         <div className="w-44">
           <Select options={STATUS_OPTS} value={status} onChange={e => setStatus(e.target.value)} />
+        </div>
+        <div className="w-44">
+          <Select options={ASSIGNED_OPTS} value={assigned} onChange={e => setAssigned(e.target.value)} />
         </div>
         <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
           <input type="checkbox" className="accent-red-600" checked={slaBreached} onChange={e => setSla(e.target.checked)} />

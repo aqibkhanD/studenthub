@@ -34,16 +34,18 @@ export default function FormTypesSettingsPage() {
   const [form,     setForm]     = useState<FTForm>(EMPTY);
   const [filter,   setFilter]   = useState('');
 
+  // Backend returns Laravel paginated { data: [...], current_page, total, ... }
   const { data: formTypes, isLoading } = useQuery({
     queryKey: ['form-types-admin'],
     queryFn:  () => superApi.formTypes(),
-    select:   (res) => res.data as FormType[],
+    select:   (res) => ((res.data as { data?: FormType[] })?.data ?? []) as FormType[],
   });
 
+  // Backend returns { departments: [...] } — keyed object, not paginated.
   const { data: depts } = useQuery({
     queryKey: ['departments'],
     queryFn:  () => superApi.departments(),
-    select:   (res) => res.data as Department[],
+    select:   (res) => ((res.data as { departments?: Department[] })?.departments ?? []) as Department[],
   });
 
   const deptOpts = [
@@ -51,24 +53,51 @@ export default function FormTypesSettingsPage() {
     ...(depts ?? []).map(d => ({ value: String(d.id), label: d.name })),
   ];
 
+  // Convert FTForm into a backend-ready payload. Empty numeric strings become
+  // null so Laravel's `nullable|integer` rule passes (it rejects "" because
+  // empty string is not null).
+  const toPayload = (f: FTForm): Record<string, unknown> => ({
+    name:               f.name,
+    slug:               f.slug,
+    category:           f.category,
+    department_id:      f.department_id === '' ? null : Number(f.department_id),
+    description:        f.description || null,
+    instructions:       f.instructions || null,
+    sla_hours:          f.sla_hours === '' ? null : Number(f.sla_hours),
+    requires_documents: f.requires_documents,
+    allow_anonymous:    f.allow_anonymous,
+  });
+
+  const showApiError = (err: unknown, fallback: string) => {
+    const data = (err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } })?.response?.data;
+    if (data?.errors) {
+      toast({ title: Object.values(data.errors).flat().join(' '), variant: 'error' });
+    } else if (data?.message) {
+      toast({ title: data.message, variant: 'error' });
+    } else {
+      toast({ title: fallback, variant: 'error' });
+    }
+  };
+
   const createMut = useMutation({
-    mutationFn: (data: FTForm) => superApi.createFormType(data),
+    mutationFn: (data: FTForm) => superApi.createFormType(toPayload(data)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['form-types-admin'] });
       setShowForm(false); setForm(EMPTY);
       toast({ title: 'Form type created', variant: 'success' });
     },
-    onError: () => toast({ title: 'Failed to create form type', variant: 'error' }),
+    onError: (err) => showApiError(err, 'Failed to create form type'),
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: FTForm }) => superApi.updateFormType(id, data),
+    mutationFn: ({ id, data }: { id: number; data: FTForm }) =>
+      superApi.updateFormType(id, toPayload(data)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['form-types-admin'] });
       setEditId(null);
       toast({ title: 'Form type updated', variant: 'success' });
     },
-    onError: () => toast({ title: 'Failed to update', variant: 'error' }),
+    onError: (err) => showApiError(err, 'Failed to update form type'),
   });
 
   const toggleMut = useMutation({
@@ -94,9 +123,7 @@ export default function FormTypesSettingsPage() {
     else        createMut.mutate(form);
   };
 
-  const displayed = (formTypes ?? []).filter(ft =>
-    !filter || ft.category === filter
-  );
+  const displayed = (formTypes ?? []).filter(ft => !filter || ft.category === filter);
 
   return (
     <div className="p-6 space-y-5">
@@ -191,11 +218,14 @@ export default function FormTypesSettingsPage() {
               <div className="col-span-4">Name</div>
               <div className="col-span-3">Category</div>
               <div className="col-span-2">Department</div>
+              <div className="col-span-1 text-right">Fields</div>
               <div className="col-span-1 text-right">SLA</div>
-              <div className="col-span-2" />
+              <div className="col-span-1" />
             </div>
             <ul className="divide-y divide-gray-50">
-              {displayed.map((ft) => (
+              {displayed.map((ft) => {
+                const fieldCount = ft.fields?.length ?? 0;
+                return (
                 <li key={ft.id} className={clsx('grid md:grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors', !ft.is_active && 'opacity-50')}>
                   <div className="md:col-span-4">
                     <div className="text-sm font-medium text-gray-800">{ft.name}</div>
@@ -203,8 +233,19 @@ export default function FormTypesSettingsPage() {
                   </div>
                   <div className="md:col-span-3 text-sm text-gray-500">{CATEGORY_LABELS[ft.category as keyof typeof CATEGORY_LABELS] ?? ft.category}</div>
                   <div className="md:col-span-2 text-sm text-gray-500">{ft.department?.name ?? '—'}</div>
+                  <div className="md:col-span-1 text-right">
+                    {/* Field-count chip — orange when 0 (form has no schema, will be empty for students) */}
+                    <span className={clsx(
+                      'inline-flex items-center justify-center text-xs font-medium px-2 py-0.5 rounded-full',
+                      fieldCount === 0
+                        ? 'bg-orange-50 text-orange-600'
+                        : 'bg-gray-100 text-gray-600',
+                    )} title={fieldCount === 0 ? 'No fields defined — students will see only the description' : undefined}>
+                      {fieldCount}
+                    </span>
+                  </div>
                   <div className="md:col-span-1 text-sm text-gray-400 text-right">{ft.sla_hours ? `${ft.sla_hours}h` : '—'}</div>
-                  <div className="md:col-span-2 flex justify-end gap-2">
+                  <div className="md:col-span-1 flex justify-end gap-2">
                     <Link
                       href={`/admin/settings/form-types/${ft.id}`}
                       className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-brand-600 bg-brand-50 rounded-md hover:bg-brand-100 transition-colors"
@@ -213,15 +254,15 @@ export default function FormTypesSettingsPage() {
                       <Settings2 className="w-3.5 h-3.5" />
                       Fields
                     </Link>
-                    <button onClick={() => startEdit(ft)} className="text-gray-400 hover:text-brand-500">
+                    <button onClick={() => startEdit(ft)} className="text-gray-400 hover:text-brand-500" title="Edit">
                       <Pencil className="w-4 h-4" />
                     </button>
-                    <button onClick={() => toggleMut.mutate(ft.id)} className={clsx('transition-colors', ft.is_active ? 'text-green-500 hover:text-red-500' : 'text-gray-300 hover:text-green-500')}>
+                    <button onClick={() => toggleMut.mutate(ft.id)} className={clsx('transition-colors', ft.is_active ? 'text-green-500 hover:text-red-500' : 'text-gray-300 hover:text-green-500')} title={ft.is_active ? 'Deactivate' : 'Activate'}>
                       {ft.is_active ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                     </button>
                   </div>
                 </li>
-              ))}
+              );})}
             </ul>
           </>
         )}

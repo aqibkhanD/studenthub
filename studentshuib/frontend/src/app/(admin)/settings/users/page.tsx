@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { superApi } from '@/lib/api';
 import { Card, Button, Input, Select, Spinner, EmptyState, useToast } from '@/components/ui';
 import type { User, Department } from '@/types';
-import { Users, Plus, UserX, UserCheck, Search } from 'lucide-react';
+import { Users, Plus, UserX, UserCheck, Search, Trash2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -22,20 +22,23 @@ export default function UsersSettingsPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
 
-  const [showForm, setShowForm] = useState(false);
-  const [form,     setForm]     = useState<UserForm>(EMPTY);
-  const [search,   setSearch]   = useState('');
+  const [showForm,   setShowForm]   = useState(false);
+  const [form,       setForm]       = useState<UserForm>(EMPTY);
+  const [search,     setSearch]     = useState('');
+  const [confirmDel, setConfirmDel] = useState<number | null>(null);
 
+  // Backend returns Laravel paginated { data: [...], current_page, total }.
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn:  () => superApi.users(),
-    select:   (res) => res.data as User[],
+    select:   (res) => ((res.data as { data?: User[] })?.data ?? []) as User[],
   });
 
+  // Departments returns { departments: [...] } — keyed.
   const { data: depts } = useQuery({
     queryKey: ['departments'],
     queryFn:  () => superApi.departments(),
-    select:   (res) => res.data as Department[],
+    select:   (res) => ((res.data as { departments?: Department[] })?.departments ?? []) as Department[],
   });
 
   const deptOpts = [
@@ -43,20 +46,50 @@ export default function UsersSettingsPage() {
     ...(depts ?? []).map(d => ({ value: String(d.id), label: d.name })),
   ];
 
+  const showApiError = (err: unknown, fallback: string) => {
+    const data = (err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } })?.response?.data;
+    if (data?.errors) {
+      toast({ title: Object.values(data.errors).flat().join(' '), variant: 'error' });
+    } else if (data?.message) {
+      toast({ title: data.message, variant: 'error' });
+    } else {
+      toast({ title: fallback, variant: 'error' });
+    }
+  };
+
   const createMut = useMutation({
-    mutationFn: (data: UserForm) => superApi.createUser(data),
+    mutationFn: (data: UserForm) => superApi.createUser({
+      ...data,
+      department_id: data.department_id === '' ? null : Number(data.department_id),
+    }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-users'] });
       setShowForm(false); setForm(EMPTY);
       toast({ title: 'User created', variant: 'success' });
     },
-    onError: () => toast({ title: 'Failed to create user', variant: 'error' }),
+    onError: (err) => showApiError(err, 'Failed to create user'),
   });
 
+  // Toggle Active — soft state flip, reversible. Different button from Delete.
   const toggleMut = useMutation({
     mutationFn: (id: number) => superApi.toggleUser(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
     onError:   () => toast({ title: 'Failed to toggle user', variant: 'error' }),
+  });
+
+  // Delete — hard delete via destroy endpoint. Backend refuses if the user
+  // has submissions on record (preserves audit history).
+  const deleteMut = useMutation({
+    mutationFn: (id: number) => superApi.deleteUser(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-users'] });
+      setConfirmDel(null);
+      toast({ title: 'User deleted', variant: 'success' });
+    },
+    onError: (err) => {
+      showApiError(err, 'Failed to delete user');
+      setConfirmDel(null);
+    },
   });
 
   const displayed = (users ?? []).filter(u =>
@@ -162,14 +195,42 @@ export default function UsersSettingsPage() {
                   <div className="md:col-span-1 text-xs text-gray-400">
                     {u.last_login_at ? formatDistanceToNow(new Date(u.last_login_at), { addSuffix: true }) : 'Never'}
                   </div>
-                  <div className="md:col-span-1 flex justify-end">
-                    <button
-                      onClick={() => toggleMut.mutate(u.id)}
-                      className={clsx('transition-colors', u.is_active ? 'text-gray-400 hover:text-red-500' : 'text-gray-300 hover:text-green-500')}
-                      title={u.is_active ? 'Deactivate user' : 'Activate user'}
-                    >
-                      {u.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-                    </button>
+                  <div className="md:col-span-1 flex justify-end items-center gap-2">
+                    {confirmDel === u.id ? (
+                      <>
+                        <button
+                          onClick={() => deleteMut.mutate(u.id)}
+                          disabled={deleteMut.isPending}
+                          className="text-xs font-medium text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded disabled:opacity-50"
+                          title="Permanently delete this user"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => setConfirmDel(null)}
+                          className="text-xs font-medium text-gray-500 hover:text-gray-700 px-2 py-1 rounded"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => toggleMut.mutate(u.id)}
+                          className={clsx('transition-colors', u.is_active ? 'text-gray-400 hover:text-yellow-500' : 'text-gray-300 hover:text-green-500')}
+                          title={u.is_active ? 'Deactivate (reversible)' : 'Activate'}
+                        >
+                          {u.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDel(u.id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors"
+                          title="Permanently delete user (refused if they have submissions on record)"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </li>
               ))}
