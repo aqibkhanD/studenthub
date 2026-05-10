@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\FormFieldController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\SystemSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -136,6 +137,10 @@ Route::prefix('v1')->group(function () {
             // Audit logs
             Route::get('audit-logs',     [AuditLogController::class, 'index']);
             Route::get('audit-logs/{id}',[AuditLogController::class, 'show']);
+
+            // System settings (semester window etc.)
+            Route::get('settings', [SystemSettingsController::class, 'index']);
+            Route::put('settings', [SystemSettingsController::class, 'update']);
 
             // Analytics
             Route::get('analytics/overview',    [DashboardController::class, 'analyticsOverview']);

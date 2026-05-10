@@ -9,6 +9,11 @@ class SubmissionStatusHistory extends Model
 {
     public $timestamps = false;
 
+    // Laravel's default pluralizer turns "SubmissionStatusHistory" into
+    // "submission_status_histories" — but the migration creates the table
+    // as "submission_status_history". Pin it explicitly.
+    protected $table = 'submission_status_history';
+
     protected $fillable = [
         'submission_id', 'changed_by', 'from_status', 'to_status',
         'comment', 'is_visible_to_student', 'step_number', 'changed_at',

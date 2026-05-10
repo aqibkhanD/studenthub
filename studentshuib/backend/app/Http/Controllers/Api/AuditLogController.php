@@ -19,6 +19,16 @@ class AuditLogController extends Controller
             ->when($request->filled('auditable_id'),   fn($q) => $q->where('auditable_id', $request->auditable_id))
             ->when($request->filled('date_from'),      fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
             ->when($request->filled('date_to'),        fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            // Free-text search across user name, action, and entity (auditable_type).
+            // Matches what the frontend's "Search by user or entity..." input promises.
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $s = $request->input('search');
+                $q->where(function ($q2) use ($s) {
+                    $q2->where('action', 'ilike', "%{$s}%")
+                       ->orWhere('auditable_type', 'ilike', "%{$s}%")
+                       ->orWhereHas('user', fn($q3) => $q3->where('name', 'ilike', "%{$s}%"));
+                });
+            })
             ->orderByDesc('created_at')
             ->paginate(50);
 

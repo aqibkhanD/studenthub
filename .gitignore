@@ -1,0 +1,46 @@
+# ── OS ─────────────────────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# ── Editors ────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*~
+
+# ── Environment (NEVER commit secrets) ─────────────────────────
+.env
+.env.local
+.env.*.local
+**/.env
+!**/.env.example
+
+# ── Backend (Laravel) ──────────────────────────────────────────
+studentshuib/backend/vendor/
+studentshuib/backend/bootstrap/cache/*.php
+studentshuib/backend/storage/app/*
+!studentshuib/backend/storage/app/.gitkeep
+studentshuib/backend/storage/framework/cache/*
+studentshuib/backend/storage/framework/sessions/*
+studentshuib/backend/storage/framework/views/*
+studentshuib/backend/storage/logs/*
+!studentshuib/backend/storage/logs/.gitkeep
+studentshuib/backend/.phpunit.result.cache
+studentshuib/backend/coverage/
+studentshuib/backend/public/storage
+studentshuib/backend/backend/
+
+# ── Frontend (Next.js) ─────────────────────────────────────────
+studentshuib/frontend/node_modules/
+studentshuib/frontend/.next/
+studentshuib/frontend/out/
+studentshuib/frontend/coverage/
+studentshuib/frontend/next-env.d.ts
+
+# ── macOS Finder duplicate-name artifacts ──────────────────────
+**/* 2
+**/* 3
+
+# ── Misc ───────────────────────────────────────────────────────
+*.log

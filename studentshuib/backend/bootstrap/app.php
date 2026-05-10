@@ -12,8 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health:     '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Register alias for role-based access (bearer-token API — no stateful/cookie auth)
+        // Override the default Authenticate middleware with our API-safe version.
+        // The default calls route('login') when unauthenticated — that route doesn't
+        // exist in a pure bearer-token API, causing a RouteNotFoundException (500).
+        // Our custom class returns null from redirectTo() instead, so the framework
+        // throws AuthenticationException cleanly → our handler returns JSON 401.
         $middleware->alias([
+            'auth' => \App\Http\Middleware\Authenticate::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
 
@@ -31,7 +36,8 @@ return Application::configure(basePath: dirname(__DIR__))
                     ], 422);
                 }
 
-                if ($e instanceof \Illuminate\Auth\AuthenticationException) {
+                if ($e instanceof \Illuminate\Auth\AuthenticationException ||
+                    $e instanceof \Symfony\Component\Routing\Exception\RouteNotFoundException) {
                     return response()->json(['message' => 'Unauthenticated.'], 401);
                 }
 

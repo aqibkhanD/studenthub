@@ -37,6 +37,12 @@ class AdminSubmissionController extends Controller
         if ($request->filled('department_id')) $query->where('department_id', $request->department_id);
         if ($request->filled('form_type_id')) $query->where('form_type_id', $request->form_type_id);
         if ($request->filled('assigned_to')) $query->where('assigned_to', $request->assigned_to);
+        // assigned=0 → unassigned (whereNull); assigned=1 → assigned (whereNotNull)
+        if ($request->has('assigned') && $request->input('assigned') !== '') {
+            $request->input('assigned') == '0'
+                ? $query->whereNull('assigned_to')
+                : $query->whereNotNull('assigned_to');
+        }
         if ($request->filled('date_from'))   $query->whereDate('submitted_at', '>=', $request->date_from);
         if ($request->filled('date_to'))     $query->whereDate('submitted_at', '<=', $request->date_to);
         if ($request->filled('search')) {
@@ -219,6 +225,12 @@ class AdminSubmissionController extends Controller
         if ($request->filled('status'))        $query->where('status', $request->status);
         if ($request->filled('department_id')) $query->where('department_id', $request->department_id);
         if ($request->filled('form_type_id'))  $query->where('form_type_id', $request->form_type_id);
+        if ($request->filled('assigned_to'))   $query->where('assigned_to', $request->assigned_to);
+        if ($request->has('assigned') && $request->input('assigned') !== '') {
+            $request->input('assigned') == '0'
+                ? $query->whereNull('assigned_to')
+                : $query->whereNotNull('assigned_to');
+        }
         if ($request->filled('date_from'))     $query->whereDate('submitted_at', '>=', $request->date_from);
         if ($request->filled('date_to'))       $query->whereDate('submitted_at', '<=', $request->date_to);
         if ($request->filled('search')) {

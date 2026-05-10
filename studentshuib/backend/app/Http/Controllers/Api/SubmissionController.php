@@ -195,7 +195,7 @@ class SubmissionController extends Controller
             'id'           => $s->id,
             'reference_no' => $s->reference_no,
             'status'       => $s->status,
-            'form_type'    => $s->formType ? ['id' => $s->formType->id, 'name' => $s->formType->name, 'category' => $s->formType->category] : null,
+            'form_type'    => $s->formType ? ['id' => $s->formType->id, 'name' => $s->formType->name, 'slug' => $s->formType->slug, 'category' => $s->formType->category] : null,
             'department'   => $s->department ? ['id' => $s->department->id, 'name' => $s->department->name] : null,
             'is_anonymous' => $s->is_anonymous,
             'submitted_at' => $s->submitted_at?->toIso8601String(),

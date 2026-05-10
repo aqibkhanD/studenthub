@@ -88,10 +88,12 @@ class FormFieldController extends Controller
     {
         return $request->validate([
             'label'            => 'required|string|max:100',
-            // field_key must be unique within the same form type (excluding self on update)
+            // field_key must be unique within the same form type (excluding self on update).
+            // Use 'NULL' literal when $fieldId is null (CREATE case) — PostgreSQL rejects
+            // empty string as bigint input, MySQL would silently coerce to 0.
             'field_key'        => [
                 'required', 'string', 'max:100', 'regex:/^[a-z][a-z0-9_]*$/',
-                "unique:form_fields,field_key,{$fieldId},id,form_type_id,{$formTypeId}",
+                'unique:form_fields,field_key,' . ($fieldId ?? 'NULL') . ",id,form_type_id,{$formTypeId}",
             ],
             'field_type'       => 'required|in:text,textarea,select,checkbox,date,email,phone,number,file',
             'options'          => 'nullable|array',
