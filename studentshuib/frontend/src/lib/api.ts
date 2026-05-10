@@ -104,6 +104,7 @@ export const superApi = {
   departments:      (params?: Record<string, unknown>)         => api.get('/super/departments', { params }),
   createDepartment: (data: Record<string, unknown>)            => api.post('/super/departments', data),
   updateDepartment: (id: number, data: Record<string, unknown>)=> api.put(`/super/departments/${id}`, data),
+  deleteDepartment: (id: number)                               => api.delete(`/super/departments/${id}`),
   createDept:       (data: Record<string, unknown>)            => api.post('/super/departments', data),  // legacy alias
   updateDept:       (id: number, data: Record<string, unknown>)=> api.put(`/super/departments/${id}`, data),
   formType:         (id: number)                               => api.get(`/super/form-types/${id}`),
