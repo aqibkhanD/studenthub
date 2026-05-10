@@ -49,11 +49,13 @@ export type FieldType = 'text' | 'textarea' | 'select' | 'radio' | 'checkbox' | 
 
 export interface FormField {
   id: number;
+  form_type_id?: number;
   label: string;
   field_key: string;
   field_type: FieldType;
   options: string[] | null;
   is_required: boolean;
+  is_active: boolean;
   placeholder: string | null;
   help_text: string | null;
   validation_rules: string | null;
@@ -64,7 +66,7 @@ export interface Submission {
   id: number;
   reference_no: string;
   status: SubmissionStatus;
-  form_type: { id: number; name: string; category: FormCategory } | null;
+  form_type: { id: number; name: string; slug: string; category: FormCategory } | null;
   department: { id: number; name: string } | null;
   is_anonymous: boolean;
   submitted_at: string | null;
@@ -175,12 +177,64 @@ export interface PaginatedResponse<T> {
 }
 
 export interface DashboardStats {
-  status_counts: Partial<Record<SubmissionStatus, number>>;
-  sla_breached: number;
-  unassigned: number;
-  total_open: number;
-  recent_by_day: { date: string; count: number }[];
+  // Period meta
+  period: 'week' | 'month' | 'semester';
+  period_label: string;
+  period_start: string;
+  period_end:   string;
+
+  // 6 stat cards
+  total_submitted:           number;
+  total_submitted_delta_pct: number | null;
+  completed:                 number;
+  completed_delta_pct:       number | null;
+  pending_review:            number;
+  overdue:                   number;
+  escalated:                 number;
+  avg_resolution_days:       number | null;
+
+  // Status breakdown
+  status_counts:  Partial<Record<SubmissionStatus, number>>;
+  total_active:   number;
+  total_snapshot: number;
+
+  // Submission volume (line chart)
+  submission_volume: { label: string; count: number; date: string }[];
+  volume_peak:       number;
+
+  // Department performance (null for dept-scoped admins)
+  departments: {
+    id: number; name: string;
+    period_total: number; open_count: number; breached_count: number;
+  }[] | null;
+
+  // Recent activity
+  recent_activity: {
+    id: number;
+    reference_no: string | null;
+    form_type:    string | null;
+    department:   string | null;
+    from_status:  SubmissionStatus | null;
+    to_status:    SubmissionStatus;
+    comment:      string | null;
+    changed_at:   string;
+    changed_by:   string | null;
+  }[];
+
+  // Legacy fields (still returned for backwards compat)
+  sla_breached:   number;
+  unassigned:     number;
+  total_open:     number;
+  recent_by_day:  { date: string; count: number }[];
   top_form_types: { name: string; count: number }[];
+}
+
+export interface SystemSettings {
+  semester: {
+    label:      string;
+    start_date: string;
+    end_date:   string;
+  };
 }
 
 // Category display labels

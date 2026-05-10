@@ -61,7 +61,7 @@ export const studentApi = {
 
 // ---- Admin ----
 export const adminApi = {
-  dashboard:      ()                                         => api.get('/admin/dashboard'),
+  dashboard:      (params?: Record<string, unknown>)         => api.get('/admin/dashboard', { params }),
   submissions:    (params?: Record<string, unknown>)         => api.get('/admin/submissions', { params }),
   submission:     (ref: string)                              => api.get(`/admin/submissions/${ref}`),
   getSubmission:  (ref: string)                              => api.get(`/admin/submissions/${ref}`),
@@ -93,6 +93,7 @@ export const superApi = {
   createUser:       (data: Record<string, unknown>)            => api.post('/super/users', data),
   updateUser:       (id: number, data: Record<string, unknown>)=> api.put(`/super/users/${id}`, data),
   toggleUser:       (id: number)                               => api.put(`/super/users/${id}/toggle-active`),
+  deleteUser:       (id: number)                               => api.delete(`/super/users/${id}`),
   formTypes:        (params?: Record<string, unknown>)         => api.get('/super/form-types', { params }),
   createFormType:   (data: Record<string, unknown>)            => api.post('/super/form-types', data),
   updateFormType:   (id: number, data: Record<string, unknown>)=> api.put(`/super/form-types/${id}`, data),
@@ -115,4 +116,7 @@ export const superApi = {
   slaReport:        ()                                         => api.get('/super/analytics/sla'),
   deptReport:       (days?: number)                            => api.get('/super/analytics/departments', { params: days ? { days } : undefined }),
   auditLogs:        (params?: Record<string, unknown>)         => api.get('/super/audit-logs', { params }),
+  // System settings (semester window etc.)
+  systemSettings:       ()                                     => api.get('/super/settings'),
+  updateSystemSettings: (data: Record<string, unknown>)        => api.put('/super/settings', data),
 };
