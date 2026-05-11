@@ -29,7 +29,8 @@ export default function RegisterPage() {
       const res = await authApi.register(data);
       const { token, user } = res.data as { token: string; user: User };
       setAuth(user, token);
-      router.push('/student/dashboard');
+      // Student URLs do NOT have a /student/ prefix (route group is invisible).
+      router.push('/dashboard');
     } catch (err: unknown) {
       const errors = (err as { response?: { data?: { errors?: Record<string, string[]> } } })?.response?.data?.errors;
       const msg = errors ? Object.values(errors).flat()[0] : 'Registration failed. Please try again.';
