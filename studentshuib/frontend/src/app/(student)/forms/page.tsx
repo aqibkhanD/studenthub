@@ -18,7 +18,12 @@ export default function FormCataloguePage() {
   });
 
   const formTypes = data ?? [];
-  const categories = [...new Set(formTypes.map(f => f.category))];
+  // Dedupe categories without iterating a Set — avoids tsconfig's
+  // downlevelIteration requirement. Equivalent to [...new Set(...)] for
+  // this size of list (~10 form types).
+  const categories = formTypes
+    .map(f => f.category)
+    .filter((category, index, allCategories) => allCategories.indexOf(category) === index);
   const filtered   = activeCategory ? formTypes.filter(f => f.category === activeCategory) : formTypes;
 
   return (
@@ -56,7 +61,7 @@ export default function FormCataloguePage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {filtered.map((ft) => (
-            <Link key={ft.id} href={`/student/forms/${ft.slug}`}>
+            <Link key={ft.id} href={`/forms/${ft.slug}`}>
               <Card className="hover:shadow-md hover:border-brand-100 transition-all cursor-pointer h-full">
                 <CardBody className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">

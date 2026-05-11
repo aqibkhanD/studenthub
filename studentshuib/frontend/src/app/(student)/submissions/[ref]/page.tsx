@@ -42,7 +42,7 @@ export default function SubmissionDetailPage() {
     <div className="p-6 max-w-3xl mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <Link href="/student/submissions" className="text-gray-400 hover:text-gray-600 mt-1">
+        <Link href="/submissions" className="text-gray-400 hover:text-gray-600 mt-1">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex-1">
@@ -69,7 +69,7 @@ export default function SubmissionDetailPage() {
       {isActionable && (
         <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl">
           <p className="text-sm font-medium text-orange-800">Action required — please review the comments below and update your submission if needed.</p>
-          <Link href={`/student/submissions/${ref}/resubmit`}>
+          <Link href={`/submissions/${ref}/resubmit`}>
             <Button size="sm" variant="danger" className="mt-3">Update Submission</Button>
           </Link>
         </div>

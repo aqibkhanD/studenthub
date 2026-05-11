@@ -86,7 +86,7 @@ export default function SubmitFormPage() {
 
       setSubmitState('done');
       toast(`Request submitted! Reference: ${ref}`, 'success');
-      router.push(`/student/submissions/${ref}`);
+      router.push(`/submissions/${ref}`);
     } catch (err: unknown) {
       setSubmitState('idle');
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -104,7 +104,7 @@ export default function SubmitFormPage() {
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/student/forms" className="text-gray-400 hover:text-gray-600">
+        <Link href="/forms" className="text-gray-400 hover:text-gray-600">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
@@ -276,7 +276,7 @@ export default function SubmitFormPage() {
               <Button type="submit" loading={isLoading2} className="flex-1">
                 {submitState === 'uploading' ? 'Uploading files…' : 'Submit Request'}
               </Button>
-              <Link href="/student/forms">
+              <Link href="/forms">
                 <Button type="button" variant="outline" disabled={isLoading2}>Cancel</Button>
               </Link>
             </div>

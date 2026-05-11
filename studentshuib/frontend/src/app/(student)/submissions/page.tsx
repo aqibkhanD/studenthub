@@ -35,7 +35,7 @@ export default function MySubmissionsPage() {
     <div className="p-6 max-w-4xl mx-auto space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">My Submissions</h1>
-        <Link href="/student/forms" className="px-4 py-2 bg-brand-500 text-white text-sm rounded-lg font-medium hover:bg-brand-600">
+        <Link href="/forms" className="px-4 py-2 bg-brand-500 text-white text-sm rounded-lg font-medium hover:bg-brand-600">
           New Request
         </Link>
       </div>
@@ -59,7 +59,7 @@ export default function MySubmissionsPage() {
             <ul className="divide-y divide-gray-50">
               {submissions.map((s) => (
                 <li key={s.id}>
-                  <Link href={`/student/submissions/${s.reference_no}`} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
+                  <Link href={`/submissions/${s.reference_no}`} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-900">{s.form_type?.name}</span>
