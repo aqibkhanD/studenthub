@@ -1,5 +1,3 @@
-version: '3.9'
-
 # ============================================================
 #  StudentsHub — Docker Compose Stack
 #  Services: Nginx, PHP-FPM (Laravel), PostgreSQL, Redis,
