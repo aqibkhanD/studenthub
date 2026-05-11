@@ -33,7 +33,7 @@ export interface FormType {
   id: number;
   name: string;
   slug: string;
-  category: string;
+  category: FormCategory;
   department_id: number | null;
   department: { id: number; name: string } | null;
   description: string | null;
