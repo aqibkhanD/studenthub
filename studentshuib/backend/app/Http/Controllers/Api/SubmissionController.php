@@ -90,7 +90,11 @@ class SubmissionController extends Controller
     {
         $submission = Submission::where('reference_no', $ref)
             ->where('student_id', $request->user()->id)
-            ->whereIn('status', [Submission::STATUS_RETURNED, Submission::STATUS_DRAFT])
+            ->whereIn('status', [
+                Submission::STATUS_RETURNED,
+                Submission::STATUS_ACTION_REQUIRED,
+                Submission::STATUS_DRAFT,
+            ])
             ->firstOrFail();
 
         $data = $request->validate([

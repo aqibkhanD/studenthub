@@ -63,9 +63,9 @@ export default function AdminNotificationsPage() {
                   <p className="text-sm text-gray-600 mt-0.5">{n.body}</p>
                   <div className="flex items-center gap-3 mt-1">
                     <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</span>
-                    {n.submission_id && (
+                    {n.submission_reference_no && (
                       <Link
-                        href={`/admin/submissions/${n.submission_id}`}
+                        href={`/admin/submissions/${n.submission_reference_no}`}
                         className="text-xs text-brand-500 hover:underline"
                         onClick={e => e.stopPropagation()}
                       >

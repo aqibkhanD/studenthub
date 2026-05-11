@@ -115,7 +115,7 @@ export default function AdminSubmissionDetailPage() {
   const { data: submission, isLoading } = useQuery({
     queryKey: ['admin-submission', ref],
     queryFn:  () => adminApi.getSubmission(ref),
-    select:   (res) => res.data as Submission,
+    select:   (res) => (res.data as { submission: Submission }).submission,
   });
 
   /* Fetch staff list for assignment */

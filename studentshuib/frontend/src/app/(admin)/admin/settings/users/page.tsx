@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { superApi } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { Card, Button, Input, Select, Spinner, EmptyState, useToast } from '@/components/ui';
 import type { User, Department } from '@/types';
 import { Users, Plus, UserX, UserCheck, Search, Trash2 } from 'lucide-react';
@@ -21,6 +22,7 @@ const ROLE_OPTS = [
 export default function UsersSettingsPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const currentUserId = useAuthStore((s) => s.user?.id);
 
   const [showForm,   setShowForm]   = useState(false);
   const [form,       setForm]       = useState<UserForm>(EMPTY);
@@ -74,7 +76,7 @@ export default function UsersSettingsPage() {
   const toggleMut = useMutation({
     mutationFn: (id: number) => superApi.toggleUser(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
-    onError:   () => toast('Failed to toggle user', 'error'),
+    onError:   (err) => showApiError(err, 'Failed to toggle user'),
   });
 
   // Delete — hard delete via destroy endpoint. Backend refuses if the user
@@ -182,9 +184,14 @@ export default function UsersSettingsPage() {
               <div className="col-span-1" />
             </div>
             <ul className="divide-y divide-gray-50">
-              {displayed.map((u) => (
+              {displayed.map((u) => {
+                const isSelf = u.id === currentUserId;
+                return (
                 <li key={u.id} className={clsx('grid md:grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors', !u.is_active && 'opacity-50')}>
-                  <div className="md:col-span-3 text-sm font-medium text-gray-800">{u.name}</div>
+                  <div className="md:col-span-3 text-sm font-medium text-gray-800">
+                    {u.name}
+                    {isSelf && <span className="ml-2 text-xs font-normal text-gray-400">(you)</span>}
+                  </div>
                   <div className="md:col-span-3 text-sm text-gray-500 truncate">{u.email}</div>
                   <div className="md:col-span-2">
                     <span className={clsx('text-xs font-medium px-2 py-0.5 rounded-full capitalize', roleBadge(u.role))}>
@@ -216,16 +223,28 @@ export default function UsersSettingsPage() {
                     ) : (
                       <>
                         <button
-                          onClick={() => toggleMut.mutate(u.id)}
-                          className={clsx('transition-colors', u.is_active ? 'text-gray-400 hover:text-yellow-500' : 'text-gray-300 hover:text-green-500')}
-                          title={u.is_active ? 'Deactivate (reversible)' : 'Activate'}
+                          onClick={() => !isSelf && toggleMut.mutate(u.id)}
+                          disabled={isSelf}
+                          className={clsx(
+                            'transition-colors',
+                            isSelf
+                              ? 'text-gray-200 cursor-not-allowed'
+                              : u.is_active
+                                ? 'text-gray-400 hover:text-yellow-500'
+                                : 'text-gray-300 hover:text-green-500'
+                          )}
+                          title={isSelf ? 'You cannot deactivate your own account' : (u.is_active ? 'Deactivate (reversible)' : 'Activate')}
                         >
                           {u.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                         </button>
                         <button
-                          onClick={() => setConfirmDel(u.id)}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
-                          title="Permanently delete user (refused if they have submissions on record)"
+                          onClick={() => !isSelf && setConfirmDel(u.id)}
+                          disabled={isSelf}
+                          className={clsx(
+                            'transition-colors',
+                            isSelf ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-red-500'
+                          )}
+                          title={isSelf ? 'You cannot delete your own account' : 'Permanently delete user (refused if they have submissions on record)'}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -233,7 +252,8 @@ export default function UsersSettingsPage() {
                     )}
                   </div>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </>
         )}

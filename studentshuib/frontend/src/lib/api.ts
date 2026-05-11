@@ -43,9 +43,9 @@ export const authApi = {
 
 // ---- Student ----
 export const studentApi = {
-  formTypes:   (params?: Record<string, string>)        => api.get('/student/form-types', { params }),
+  formTypes:   (params?: Record<string, unknown>)       => api.get('/student/form-types', { params }),
   formType:    (slug: string)                           => api.get(`/student/form-types/${slug}`),
-  submissions: (params?: Record<string, string | number>) => api.get('/student/submissions', { params }),
+  submissions: (params?: Record<string, unknown>)       => api.get('/student/submissions', { params }),
   submission:  (ref: string)                            => api.get(`/student/submissions/${ref}`),
   submit:      (data: object)          => api.post('/student/submissions', data),
   resubmit:    (ref: string, data: object) => api.put(`/student/submissions/${ref}`, data),

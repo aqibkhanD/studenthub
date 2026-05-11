@@ -75,6 +75,34 @@ class UserController extends Controller
             'semester'      => 'nullable|string|max:20',
         ]);
 
+        // Self-demotion guard — a super_admin cannot strip their own super_admin role.
+        // Without this, the only super_admin could lock themselves out of admin
+        // settings on the next request.
+        if (
+            $id === $request->user()->id
+            && array_key_exists('role', $data)
+            && $data['role'] !== 'super_admin'
+            && $user->role === 'super_admin'
+        ) {
+            return response()->json([
+                'message' => 'You cannot demote your own super_admin role. Ask another super_admin to do this.',
+            ], 422);
+        }
+
+        // Last-super-admin guard — refuse demotion if it would leave zero
+        // active super_admins in the system.
+        if (
+            array_key_exists('role', $data)
+            && $data['role'] !== 'super_admin'
+            && $user->role === 'super_admin'
+            && $user->is_active
+            && $this->isLastActiveSuperAdmin($id)
+        ) {
+            return response()->json([
+                'message' => 'Cannot demote: this is the only active super_admin in the system.',
+            ], 422);
+        }
+
         if ($request->filled('password')) {
             $request->validate(['password' => 'string|min:8']);
             $data['password'] = Hash::make($request->password);
@@ -103,6 +131,16 @@ class UserController extends Controller
         }
 
         $user = User::findOrFail($id);
+
+        // Last-super-admin guard — never remove the system's only active
+        // super_admin. Inactive super_admins do not trigger this guard
+        // because deleting an already-inactive user changes nothing about
+        // the active super_admin count.
+        if ($user->role === 'super_admin' && $user->is_active && $this->isLastActiveSuperAdmin($id)) {
+            return response()->json([
+                'message' => 'Cannot delete: this is the only active super_admin in the system.',
+            ], 422);
+        }
 
         // FK guard — refuse hard delete if user has submissions on record
         $studentSubmissions  = \App\Models\Submission::where('student_id', $id)->count();
@@ -154,10 +192,35 @@ class UserController extends Controller
     // PUT /api/v1/super/users/{id}/toggle-active
     public function toggleActive(Request $request, int $id): JsonResponse
     {
+        if ($id === $request->user()->id) {
+            return response()->json([
+                'message' => 'You cannot deactivate your own account.',
+            ], 422);
+        }
+
         $user = User::findOrFail($id);
+
+        // Last-super-admin guard — only relevant on the active → inactive transition.
+        if ($user->is_active && $user->role === 'super_admin' && $this->isLastActiveSuperAdmin($id)) {
+            return response()->json([
+                'message' => 'Cannot deactivate: this is the only active super_admin in the system.',
+            ], 422);
+        }
+
         $user->update(['is_active' => !$user->is_active]);
         $action = $user->is_active ? 'user.activated' : 'user.deactivated';
         $this->audit->log($request->user()->id, $action, 'User', $id);
         return response()->json(['is_active' => $user->is_active]);
+    }
+
+    // True when removing $userId from the active-super_admin set would leave
+    // zero active super_admins. Used by destroy/update/toggleActive to refuse
+    // operations that would lock the system out of super-admin actions.
+    private function isLastActiveSuperAdmin(int $userId): bool
+    {
+        return !User::where('role', 'super_admin')
+            ->where('is_active', true)
+            ->where('id', '!=', $userId)
+            ->exists();
     }
 }

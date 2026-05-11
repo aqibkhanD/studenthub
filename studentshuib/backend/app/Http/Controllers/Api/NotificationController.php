@@ -12,11 +12,19 @@ class NotificationController extends Controller
     // GET /api/v1/student/notifications  or  /api/v1/admin/notifications
     public function index(Request $request): JsonResponse
     {
-        $notifications = Notification::where('user_id', $request->user()->id)
+        $notifications = Notification::with(['submission:id,reference_no'])
+            ->where('user_id', $request->user()->id)
             ->where('channel', 'in_app')
             ->when($request->boolean('unread_only'), fn($q) => $q->where('is_read', false))
             ->orderByDesc('created_at')
             ->paginate(30);
+
+        // Expose submission_reference_no for deep-linking; drop the relation
+        // from the serialized payload so the response stays small.
+        $notifications->getCollection()->each(function (Notification $n) {
+            $n->setAttribute('submission_reference_no', $n->submission?->reference_no);
+            $n->unsetRelation('submission');
+        });
 
         $unreadCount = Notification::where('user_id', $request->user()->id)
             ->where('channel', 'in_app')

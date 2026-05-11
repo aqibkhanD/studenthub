@@ -34,11 +34,21 @@ export default function SubmitFormPage() {
   const { register, handleSubmit, formState: { errors } } = useForm<Record<string, string>>();
 
   const onSubmit = async (formData: Record<string, string>) => {
-    setSubmitState('submitting');
-
     // Split fields: file-type fields handled separately
     const fileFields  = (formType?.fields ?? []).filter(f => f.field_type === 'file' && f.is_active);
     const textFields  = (formType?.fields ?? []).filter(f => f.field_type !== 'file');
+
+    // File inputs sit outside react-hook-form so its `required` validation
+    // doesn't see them. Enforce required-file fields here before we submit.
+    const missingRequiredFile = fileFields.find(
+      (field) => field.is_required && !fileRefs.current[field.field_key]?.files?.[0]
+    );
+    if (missingRequiredFile) {
+      toast(`"${missingRequiredFile.label}" is required. Please attach a file.`, 'error');
+      return;
+    }
+
+    setSubmitState('submitting');
 
     // Build text-only form_data (file fields excluded from JSON payload)
     const textData: Record<string, string> = {};

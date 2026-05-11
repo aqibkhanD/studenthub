@@ -143,6 +143,7 @@ export interface Notification {
   is_read: boolean;
   created_at: string;
   submission_id: number | null;
+  submission_reference_no: string | null;
 }
 
 export interface Department {

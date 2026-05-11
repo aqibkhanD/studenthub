@@ -62,8 +62,8 @@ export default function NotificationsPage() {
                   <p className="text-sm text-gray-600 mt-0.5">{n.body}</p>
                   <div className="flex items-center gap-3 mt-1">
                     <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</span>
-                    {n.submission_id && (
-                      <Link href={`/submissions/${n.submission_id}`} className="text-xs text-brand-500 hover:underline">
+                    {n.submission_reference_no && (
+                      <Link href={`/submissions/${n.submission_reference_no}`} className="text-xs text-brand-500 hover:underline">
                         View request
                       </Link>
                     )}
