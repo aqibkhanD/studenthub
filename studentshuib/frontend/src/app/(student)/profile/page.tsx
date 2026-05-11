@@ -87,7 +87,7 @@ export default function StudentProfilePage() {
     setProfileSaving(true);
     setProfileAlert(null);
     try {
-      await authApi.updateProfile(profile as Record<string, string>);
+      await authApi.updateProfile(profile);
       // Refresh auth store with latest user data
       const meRes = await authApi.me();
       const updatedUser = meRes.data.user;
@@ -122,7 +122,7 @@ export default function StudentProfilePage() {
 
     setPwSaving(true);
     try {
-      await authApi.changePassword(passwords as Record<string, string>);
+      await authApi.changePassword(passwords);
       setPwAlert({ type: 'success', message: 'Password changed. Please use your new password next time you log in.' });
       setPasswords({ current_password: '', password: '', password_confirmation: '' });
     } catch (err: unknown) {
